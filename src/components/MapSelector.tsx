@@ -6,8 +6,13 @@ import { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 
-// Fix for default Leaflet icon issue with Webpack
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+
+type LeafletIconPrototype = L.Icon.Default & {
+  _getIconUrl?: unknown;
+};
+
+delete (L.Icon.Default.prototype as LeafletIconPrototype)._getIconUrl;
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
@@ -28,8 +33,14 @@ interface AreaGroup {
   location_center: [number, number];
 }
 
+// Type declaration for the ChangeView component's props
+type ChangeViewProps = {
+  center: LatLngExpression;
+  zoom: number;
+};
+
 // A helper component to programmatically control the map view
-function ChangeView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
+function ChangeView({ center, zoom }: ChangeViewProps) {
   const map = useMap();
   map.flyTo(center, zoom);
   return null;
@@ -38,7 +49,7 @@ function ChangeView({ center, zoom }: { center: LatLngExpression; zoom: number }
 export default function MapSelector() {
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<City | null>(null);
-  
+
   const [areaGroups, setAreaGroups] = useState<AreaGroup[]>([]);
   const [selectedArea, setSelectedArea] = useState<AreaGroup | null>(null);
 
@@ -72,7 +83,7 @@ export default function MapSelector() {
     const area = areaGroups.find((a) => a.id === Number(e.target.value));
     setSelectedArea(area || null);
   };
-  
+
   const mapCenter: LatLngExpression = selectedArea?.location_center || selectedCity?.map_center || [28.6139, 77.2090];
   const mapZoom = selectedArea ? 14 : (selectedCity?.default_zoom || 10);
 
