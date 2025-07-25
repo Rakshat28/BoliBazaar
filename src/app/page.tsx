@@ -1,11 +1,21 @@
-import React from 'react'
+import HeroSection from "@/components/HeroSection";
+import ProblemSection from "@/components/ProblemSection";
+import SolutionSection from "@/components/SolutionSection";
+import ImpactSection from "@/components/ImpactSection";
+import CTASection from "@/components/CTASection";
+import Footer from "@/components/Footer";
 
-function page() {
+const Index = () => {
   return (
-    <div>
-      Home Page
+    <div className="min-h-screen">
+      <HeroSection />
+      <ProblemSection />
+      <SolutionSection />
+      <ImpactSection />
+      <CTASection />
+      <Footer />
     </div>
-  )
-}
+  );
+};
 
-export default page
+export default Index;
