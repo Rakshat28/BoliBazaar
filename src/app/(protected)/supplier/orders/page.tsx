@@ -1,5 +1,5 @@
 import React from 'react'
-import VendorTable from '@/components/SupplierTable'
+import VendorTable from '../_components/SupplierTable'
 import { Card } from '@/components/ui/card';
 
 const page = () => {

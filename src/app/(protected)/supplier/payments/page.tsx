@@ -1,4 +1,4 @@
-import PaymentRecievedTable from '@/components/PaymentRecievedTable'
+import PaymentRecievedTable from '../_components/PaymentRecievedTable'
 import { Card } from '@/components/ui/card';
 import React from 'react'
 

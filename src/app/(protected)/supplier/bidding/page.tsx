@@ -1,5 +1,5 @@
-import ActiveBiddingTable from '@/components/ActiveBiddingTable'
-import OrderForBidding from '@/components/OrderForBidding'
+import ActiveBiddingTable from '../_components/ActiveBiddingTable'
+import OrderForBidding from '../_components/OrderForBidding'
 import React from 'react'
 
 const page = () => {
