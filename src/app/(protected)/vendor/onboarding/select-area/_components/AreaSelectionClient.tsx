@@ -6,15 +6,16 @@ import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
-import { Combobox } from '@/components/ui/combobox'; // Import the new Combobox
+import { Combobox } from '@/components/ui/combobox';
 import { Loader2 } from 'lucide-react';
 
-// Fix for default Leaflet icon issue
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-delete (L.Icon.Default.prototype as any)._getIconUrl;
+// This type definition fixes the ESLint error without using 'any' or disabling the rule.
+type LeafletIconPrototype = L.Icon.Default & {
+  _getIconUrl?: unknown;
+};
+delete (L.Icon.Default.prototype as LeafletIconPrototype)._getIconUrl;
 
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
@@ -22,17 +23,18 @@ L.Icon.Default.mergeOptions({
   shadowUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-shadow.png',
 });
 
-// Define the types for our data
+// Type definitions for data
 type City = { id: number; name: string; map_center: [number, number]; default_zoom: number; };
 type AreaGroup = { id: number; area_name: string; location_center: [number, number] | null; };
 
-// Helper component to programmatically change the map's view
+// Helper component to change the map view
 function ChangeView({ center, zoom }: { center: LatLngExpression; zoom: number }) {
   const map = useMap();
   map.flyTo(center, zoom, { animate: true, duration: 1 });
   return null;
 }
 
+// This component now accepts the initial list of cities as a prop.
 export function AreaSelectionClient({ cities }: { cities: City[] }) {
   const router = useRouter();
   const [selectedCityId, setSelectedCityId] = useState<string | undefined>();
@@ -46,7 +48,11 @@ export function AreaSelectionClient({ cities }: { cities: City[] }) {
   const [mapZoom, setMapZoom] = useState(10);
 
   const selectedCity = useMemo(() => cities.find(c => c.id === Number(selectedCityId)), [cities, selectedCityId]);
+  
+  // CORRECTED SYNTAX: 'of' has been removed.
   const selectedAreaGroup = useMemo(() => areaGroups.find(ag => ag.id === Number(selectedAreaGroupId)), [areaGroups, selectedAreaGroupId]);
+  
+  // The useEffect to fetch cities has been removed.
   
   // Fetch area groups when a city is selected
   useEffect(() => {
@@ -78,7 +84,6 @@ export function AreaSelectionClient({ cities }: { cities: City[] }) {
     if (!selectedAreaGroupId) return;
     setIsSaving(true);
     
-    // TODO: Create this API endpoint in Part 3
     const response = await fetch('/api/vendor/profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
