@@ -1,36 +1,98 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+![alt text](./screenshots/image-3.png)
+BoliBazaar – Empowering Local Street Vendors Through Smart Sourcing
+BoliBazaar is a digital platform designed to streamline the procurement process for local street food vendors in India by enabling collective bargaining and bulk purchasing from trusted suppliers.
 
-## Getting Started
 
-First, run the development server:
+![alt text](./screenshots/image-4.png)
+✅ Verified Suppliers
+What it means:
+All suppliers on BoliBazaar are thoroughly vetted before they’re allowed to sell. This includes checking:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+Business legitimacy (registration, GST, etc.)
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Product quality standards
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Delivery reliability (on-time performance)
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Past vendor reviews and ratings
 
-## Learn More
+Why it matters:
+Street food vendors and small businesses often suffer due to unreliable or low-quality suppliers. BoliBazaar ensures only trusted and approved suppliers can take part, which minimizes risks and builds long-term trust in the supply chain.
 
-To learn more about Next.js, take a look at the following resources:
+🔍 Transparent Bidding
+What it means:
+Suppliers compete openly by submitting bids for bulk orders placed by vendor collectives. Every vendor can see:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Which suppliers are bidding
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+What prices are being offered
 
-## Deploy on Vercel
+What terms (delivery time, quality standards, etc.) are included
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Why it matters:
+This removes hidden commissions or biased middlemen. Vendors get the best possible price and quality through direct, fair competition—empowering even the smallest vendor to negotiate like a big buyer.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+🌍 Local Focus
+What it means:
+Vendors are grouped based on geographic proximity (like same city or market), and suppliers are encouraged to deliver to specific local zones. This system:
+
+Reduces transport costs
+
+Increases delivery speed
+
+Simplifies coordination
+
+Why it matters:
+Fresh raw materials, especially in food businesses, need quick delivery. Localized operations mean faster, cheaper, and more reliable supply chains, helping vendors run their businesses smoothly without delays or losses.
+
+
+![alt text](./screenshots/image-5.png)
+🚀 How BoliBazaar Works — Step-by-Step
+✅ 1. Form Local Collectives
+Street food vendors, restaurant owners, or small businesses in the same locality connect via the platform and form a collective group.
+This gives them greater bargaining power—instead of ordering individually, they act like one big buyer.
+
+📦 Example: 10 vendors in Chandni Chowk join hands to place one large order instead of 10 small ones.
+
+📋 2. Create Bulk Orders
+These collectives pool their raw material needs—like vegetables, spices, oil, packaging, etc.—into one combined order.
+The system automatically calculates the total quantity and creates a bulk order request.
+
+🧮 Why it helps: Bulk buying reduces price per unit, and attracts more serious suppliers.
+
+🤝 3. Suppliers Compete
+Once a bulk order is created, verified suppliers on the platform are notified.
+They submit bids by offering:
+
+A competitive price
+
+Delivery timeline
+
+Product quality guarantee
+
+All bids are visible to the collective, encouraging transparent and fair competition.
+
+🏆 4. Secure the Best Deal
+The system or the collective automatically selects the best supplier based on:
+
+Lowest price
+
+Delivery time
+
+Supplier reputation
+
+Once selected, the winning supplier delivers the order to the collective, completing the transaction.
+
+🛒 Result: Vendors get high-quality materials at a better rate, with trust and transparency.
+
+Tech Stack
+
+
+
+
+![alt text](./screenshots/image-6.png)
+Purpose
+To reduce the burden on small vendors who often face high costs and limited access to quality suppliers. BoliBazaar helps them save money, increase trust, and buy smarter together.
+
+
+
