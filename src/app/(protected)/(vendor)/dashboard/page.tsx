@@ -1,3 +1,4 @@
+'use client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, Package, DollarSign } from "lucide-react";
 import Link from "next/link";
