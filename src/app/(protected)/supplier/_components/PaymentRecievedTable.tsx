@@ -1,6 +1,6 @@
 import React from 'react'
-import { Card } from './ui/card'
-import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from './ui/table'
+import { Card } from '@/components/ui/card'
+import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from '@/components/ui/table'
 const payments = [
     {
       paymentId: 'PAY001234',
