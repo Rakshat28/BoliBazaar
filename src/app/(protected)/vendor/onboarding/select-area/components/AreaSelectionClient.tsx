@@ -1,18 +1,21 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { MapContainer, TileLayer, Marker, useMap } from 'react-leaflet';
 import { LatLngExpression } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from '@/components/ui/button';
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
+import { Combobox } from '@/components/ui/combobox'; // Import the new Combobox
 import { Loader2 } from 'lucide-react';
 
 // Fix for default Leaflet icon issue
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 delete (L.Icon.Default.prototype as any)._getIconUrl;
+
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon-2x.png',
   iconUrl: 'https://unpkg.com/leaflet@1.7.1/dist/images/marker-icon.png',
@@ -32,21 +35,24 @@ function ChangeView({ center, zoom }: { center: LatLngExpression; zoom: number }
 
 export function AreaSelectionClient({ cities }: { cities: City[] }) {
   const router = useRouter();
-  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [selectedCityId, setSelectedCityId] = useState<string | undefined>();
   const [areaGroups, setAreaGroups] = useState<AreaGroup[]>([]);
-  const [selectedAreaGroup, setSelectedAreaGroup] = useState<AreaGroup | null>(null);
+  const [selectedAreaGroupId, setSelectedAreaGroupId] = useState<string | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
   // Map state
-  const [mapCenter, setMapCenter] = useState<LatLngExpression>([28.6139, 77.2090]); // Default to Delhi
+  const [mapCenter, setMapCenter] = useState<LatLngExpression>([28.6139, 77.2090]);
   const [mapZoom, setMapZoom] = useState(10);
+
+  const selectedCity = useMemo(() => cities.find(c => c.id === Number(selectedCityId)), [cities, selectedCityId]);
+  const selectedAreaGroup = useMemo(() => areaGroups.find(ag => ag.id === Number(selectedAreaGroupId)), [areaGroups, selectedAreaGroupId]);
   
   // Fetch area groups when a city is selected
   useEffect(() => {
     if (selectedCity) {
       setIsLoading(true);
-      setSelectedAreaGroup(null);
+      setSelectedAreaGroupId(undefined);
       setMapCenter(selectedCity.map_center);
       setMapZoom(selectedCity.default_zoom);
       
@@ -59,36 +65,29 @@ export function AreaSelectionClient({ cities }: { cities: City[] }) {
     }
   }, [selectedCity]);
 
-  const handleCityChange = (cityId: string) => {
-    const city = cities.find(c => c.id === parseInt(cityId));
-    setSelectedCity(city || null);
-  };
-
   const handleAreaGroupChange = (areaGroupId: string) => {
     const areaGroup = areaGroups.find(ag => ag.id === parseInt(areaGroupId));
-    setSelectedAreaGroup(areaGroup || null);
+    setSelectedAreaGroupId(areaGroupId);
     if (areaGroup?.location_center) {
       setMapCenter(areaGroup.location_center);
-      setMapZoom(14); // Zoom in closer to the selected area
+      setMapZoom(14);
     }
   };
 
   const handleSaveSelection = async () => {
-    if (!selectedAreaGroup) return;
+    if (!selectedAreaGroupId) return;
     setIsSaving(true);
     
     // TODO: Create this API endpoint in Part 3
     const response = await fetch('/api/vendor/profile', {
       method: 'PATCH',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ areaGroupId: selectedAreaGroup.id }),
+      body: JSON.stringify({ areaGroupId: parseInt(selectedAreaGroupId) }),
     });
 
     if (response.ok) {
-      // On success, redirect the user to their main dashboard
       router.push('/vendor/dashboard');
     } else {
-      // TODO: Show an error message to the user
       console.error("Failed to save area group");
       setIsSaving(false);
     }
@@ -102,29 +101,28 @@ export function AreaSelectionClient({ cities }: { cities: City[] }) {
         
         <div className="space-y-6">
           <div className="grid gap-2">
-            <label className="text-sm font-medium">1. Select Your City</label>
-            <Select onValueChange={handleCityChange}>
-              <SelectTrigger><SelectValue placeholder="Choose a city..." /></SelectTrigger>
-              <SelectContent>
-                {cities.map(city => (
-                  <SelectItem key={city.id} value={String(city.id)}>{city.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>1. Select Your City</Label>
+            <Combobox
+              options={cities.map(city => ({ value: String(city.id), label: city.name }))}
+              value={selectedCityId}
+              onChange={setSelectedCityId}
+              placeholder="Select a city..."
+              searchPlaceholder="Search for a city..."
+              emptyPlaceholder="No city found."
+            />
           </div>
 
           <div className="grid gap-2">
-            <label className="text-sm font-medium">2. Select Your Area Group</label>
-            <Select onValueChange={handleAreaGroupChange} disabled={!selectedCity || isLoading}>
-              <SelectTrigger>
-                <SelectValue placeholder={isLoading ? "Loading areas..." : "Choose your main market area..."} />
-              </SelectTrigger>
-              <SelectContent>
-                {areaGroups.map(group => (
-                  <SelectItem key={group.id} value={String(group.id)}>{group.area_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <Label>2. Select Your Area Group</Label>
+            <Combobox
+              options={areaGroups.map(group => ({ value: String(group.id), label: group.area_name }))}
+              value={selectedAreaGroupId}
+              onChange={handleAreaGroupChange}
+              placeholder={isLoading ? "Loading..." : "Select an area..."}
+              searchPlaceholder="Search for an area..."
+              emptyPlaceholder="No area found."
+              disabled={!selectedCity || isLoading}
+            />
           </div>
         </div>
 
@@ -133,7 +131,7 @@ export function AreaSelectionClient({ cities }: { cities: City[] }) {
             className="w-full" 
             size="lg"
             onClick={handleSaveSelection}
-            disabled={!selectedAreaGroup || isSaving}
+            disabled={!selectedAreaGroupId || isSaving}
           >
             {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             {isSaving ? "Saving..." : "Confirm and Continue"}
