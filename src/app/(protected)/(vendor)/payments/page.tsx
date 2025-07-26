@@ -6,11 +6,11 @@ export default function VendorPaymentsPage() {
   
   return (
     <div className="p-4 md:p-6">
-      <h1 className="text-2xl font-semibold mb-4">Payments & Wallet</h1>
+      <h1 className="text-2xl font-semibold mb-4">Payments &amp; Wallet</h1>
       
       {/* TODO: Show current wallet balance and provide options to add funds */}
       <div className="mb-6">
-        <p>[Card showing wallet balance and 'Add Funds' button]</p>
+        <p>[Card showing wallet balance and &#39;Add Funds&#39; button]</p>
       </div>
 
       <h2 className="text-lg font-semibold mb-2">Transaction History</h2>

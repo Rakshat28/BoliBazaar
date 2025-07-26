@@ -24,7 +24,7 @@ export default function PoolDetailPage({ params }: PoolDetailPageProps) {
       
       {/* TODO: Add a Card with an Input field for quantity and a Button to confirm commitment and pay escrow */}
       <div className="max-w-md">
-        <p>[Card with input to enter quantity and 'Confirm & Join Pool' button goes here]</p>
+        <p>[Card with input to enter quantity and &#39;Confirm &amp; Join Pool&#39; button goes here]</p>
       </div>
     </div>
   );
