@@ -10,7 +10,7 @@ export default function Navbar() {
     <img
         src="/vendor.png"
         alt="DaamDekho Logo"
-        className="h-12 w-12 object-contain" 
+        className="h-12 w-12 object-contain"
     />
     <span className="text-xl font-bold text-gray-900">
         BOLI<span className="text-[#457C78]">BAZAAR</span>
@@ -18,8 +18,11 @@ export default function Navbar() {
     </Link>
 </div>
 
-
-
+<div className="hidden md:flex gap-6 text-sm text-gray-700 font-medium">
+<Link href="/about" className="hover:text-[#457C78] transition-colors">
+          About
+        </Link>
+</div>
       {/* CTA Buttons */}
         <div className="flex gap-3">
         <Link
