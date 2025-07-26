@@ -1,0 +1,219 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+
+enum UserRole {
+  VENDOR
+  SUPPLIER
+  ADMIN
+}
+
+enum VerificationStatus {
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum OrderStatus {
+  PREPARING
+  AUCTION_OPEN
+  AUCTION_CLOSED
+  AWARDED
+  COMPLETED
+  CANCELLED
+}
+
+enum ItemStatus {
+  COMMITTED
+  DEPOSIT_PAID
+  DELIVERED
+  CANCELLED
+}
+
+enum TransactionType {
+  DEPOSIT_ESCROW
+  FINAL_PAYMENT
+  REFUND
+  PAYOUT_TO_SUPPLIER
+}
+
+enum TransactionStatus {
+  PENDING
+  SUCCESSFUL
+  FAILED
+}
+
+
+model City {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  map_center   Json     @db.JsonB // Stores [latitude, longitude]
+  default_zoom Int      @default(11)
+  created_at   DateTime @default(now())
+
+  AreaGroup AreaGroup[]
+
+  @@map("cities") // Maps the Prisma model name 'City' to the 'cities' table
+}
+
+model AreaGroup {
+  id             Int        @id @default(autoincrement())
+  area_name      String     @unique
+  city_id        Int
+  city           City       @relation(fields: [city_id], references: [id])
+  location_center Json?     @db.JsonB // Center coordinates for map zoom
+  boundary_coords Json?     @db.JsonB // GeoJSON polygon for map overlay
+  created_at     DateTime   @default(now())
+  updated_at     DateTime   @updatedAt
+
+  Vendor      Vendor[]
+  PooledOrder PooledOrder[]
+
+  @@map("area_groups")
+}
+
+model User {
+  id           String   @id // From Clerk Auth, usually a string ID
+  email        String   @unique
+  phone_number String?  @unique
+  full_name    String?
+  role_type    UserRole
+  created_at   DateTime @default(now())
+  updated_at   DateTime @updatedAt
+
+  Vendor       Vendor?
+  Supplier     Supplier?
+  Transactions Transaction[]
+
+  @@map("users")
+}
+
+model Product {
+  id          Int      @id @default(autoincrement())
+  name        String
+  grade       String?  @default("A")
+  unit        String
+  description String?
+  image_url   String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  PooledOrder PooledOrder[]
+
+  @@unique([name, grade]) // UNIQUE (name, grade)
+  @@map("products")
+}
+
+model Vendor {
+  user_id          String    @id // user_id is the PK and FK
+  user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  area_group_id    Int
+  areaGroup        AreaGroup @relation(fields: [area_group_id], references: [id])
+  reputation_score Decimal   @default(5.00) @db.Decimal(3, 2) // NUMERIC(3, 2)
+  created_at       DateTime  @default(now())
+  updated_at       DateTime  @updatedAt
+
+  OrderItem OrderItem[]
+
+  @@map("vendors")
+}
+
+model Supplier {
+  user_id            String           @id // user_id is the PK and FK
+  user               User             @relation(fields: [user_id], references: [id], onDelete: Cascade)
+  business_name      String
+  verification_status VerificationStatus @default(PENDING)
+  overall_rating     Decimal          @default(5.00) @db.Decimal(3, 2) // NUMERIC(3, 2)
+  created_at         DateTime         @default(now())
+  updated_at         DateTime         @updatedAt
+
+  Bid Bid[]
+
+  @@map("suppliers")
+}
+
+model PooledOrder {
+  id                         Int         @id @default(autoincrement())
+  area_group_id              Int
+  areaGroup                  AreaGroup   @relation(fields: [area_group_id], references: [id])
+  product_id                 Int
+  product                    Product     @relation(fields: [product_id], references: [id])
+  total_quantity_committed   Decimal     @default(0) @db.Decimal(10, 2) // NUMERIC(10, 2)
+  status                     OrderStatus @default(PREPARING)
+  auction_ends_at            DateTime
+  winning_bid_id             Int?        @unique // <--- ADDED @unique here
+  final_price_per_unit       Decimal?    @db.Decimal(10, 2) // NUMERIC(10, 2)
+  created_at                 DateTime    @default(now())
+  updated_at                 DateTime    @updatedAt
+
+  Bids        Bid[] // All bids for this pooled order
+  winningBid  Bid?        @relation("WinningBid", fields: [winning_bid_id], references: [id], onDelete: NoAction, onUpdate: NoAction) // Explicit relation for winning_bid_id
+  OrderItem   OrderItem[]
+
+  @@map("pooled_orders")
+}
+
+model Bid {
+  id             Int         @id @default(autoincrement())
+  pooled_order_id Int         // Foreign key to PooledOrder
+  pooledOrder    PooledOrder @relation(fields: [pooled_order_id], references: [id], onDelete: Cascade)
+  supplier_id    String      // Foreign key to Supplier
+  supplier       Supplier    @relation(fields: [supplier_id], references: [user_id])
+  price_per_unit Decimal     @db.Decimal(10, 2) // NUMERIC(10, 2)
+  notes          String?
+  created_at     DateTime    @default(now())
+
+  // Reverse relation for winning_bid_id in PooledOrder
+  WinningPooledOrder PooledOrder? @relation("WinningBid")
+
+  @@map("bids")
+}
+
+model OrderItem {
+  id                      Int           @id @default(autoincrement())
+  pooled_order_id         Int
+  pooledOrder             PooledOrder   @relation(fields: [pooled_order_id], references: [id], onDelete: Cascade)
+  vendor_id               String
+  vendor                  Vendor        @relation(fields: [vendor_id], references: [user_id])
+  quantity_committed      Decimal       @db.Decimal(10, 2) // NUMERIC(10, 2)
+  escrow_deposit_txn_id   Int?          @unique // <--- ADDED @unique here
+  status                  ItemStatus    @default(COMMITTED)
+  created_at              DateTime      @default(now())
+
+  // Explicit relation for escrow_deposit_txn_id
+  escrowDepositTxn        Transaction?  @relation("EscrowDeposit", fields: [escrow_deposit_txn_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  Transaction             Transaction[] // All transactions related to this order item (besides the escrow deposit)
+
+  @@map("order_items")
+}
+
+model Transaction {
+  id                    Int             @id @default(autoincrement())
+  user_id               String
+  user                  User            @relation(fields: [user_id], references: [id])
+  amount                Decimal         @db.Decimal(10, 2) // NUMERIC(10, 2)
+  txn_type              TransactionType
+  related_order_item_id Int?
+  status                TransactionStatus @default(PENDING)
+  created_at            DateTime        @default(now())
+
+  // Reverse relation for escrow_deposit_txn_id in OrderItem
+  EscrowedOrderItem     OrderItem?      @relation("EscrowDeposit")
+  // General relation to an order item (e.g., final payments, refunds)
+  relatedOrderItem      OrderItem?      @relation(fields: [related_order_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+
+  @@map("transactions")
+}
