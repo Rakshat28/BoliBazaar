@@ -2,24 +2,20 @@
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'svix';
-import { PrismaClient, UserRole, VerificationStatus } from '@prisma/client';
+import { UserRole, VerificationStatus } from '@prisma/client'; // Removed PrismaClient import here
+
+// Import your singleton Prisma client instance
+import prisma from '@/lib/prisma'; // <--- IMPORTANT: Use your singleton here
 
 // Import Clerk's specific event types for better type safety
-// These are the actual types Clerk uses for its webhook payloads.
 import type { UserJSON, EmailAddress, WebhookEvent as ClerkWebhookEvent } from '@clerk/nextjs/server';
 
-// Initialize Prisma client
-const prisma = new PrismaClient();
-
 // Define a more accurate custom interface for the webhook event
-// This mirrors Clerk's WebhookEvent structure more closely,
-// especially for the 'data' property which changes based on 'type'.
 interface CustomWebhookEvent {
-  data: UserJSON | { id: string } | EmailAddress; // Simplified for common cases. Add other data types as needed.
-  object: 'event'; // All webhook events have object: 'event'
-  type: string; // The specific event type, e.g., 'user.created'
+  data: UserJSON | { id: string } | EmailAddress;
+  object: 'event';
+  type: string;
 }
-
 
 export async function POST(req: NextRequest) {
   try {
@@ -40,23 +36,24 @@ export async function POST(req: NextRequest) {
     const payload = await req.text();
 
     // Create a new Svix instance with your secret.
-    // Ensure CLERK_WEBHOOK_SECRET is set in your environment variables.
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
     if (!WEBHOOK_SECRET) {
-      throw new Error('CLERK_WEBHOOK_SECRET is not set in environment variables');
+      // This error means the env var is missing during execution.
+      // If this happens during build, it means the variable isn't available at build time.
+      console.error('CLERK_WEBHOOK_SECRET is not set in environment variables.');
+      return new NextResponse('Server configuration error', { status: 500 });
     }
     const wh = new Webhook(WEBHOOK_SECRET);
 
-    let evt: CustomWebhookEvent; // Use your more accurate custom type here
+    let evt: CustomWebhookEvent;
 
     // Verify the payload with the headers
     try {
-      // The 'verify' method returns a generic object, so we cast it to our custom type.
       evt = wh.verify(payload, {
         "svix-id": svix_id,
         "svix-timestamp": svix_timestamp,
         "svix-signature": svix_signature,
-      }) as CustomWebhookEvent; // Cast to your custom interface
+      }) as CustomWebhookEvent;
     } catch (err) {
       console.error('Error verifying webhook:', err);
       return new NextResponse('Error occured -- webhook verification failed', {
@@ -66,24 +63,22 @@ export async function POST(req: NextRequest) {
 
     const eventType = evt.type;
 
-    // Handle different event types with proper type narrowing
+    console.log(`[Webhook] Received event: ${eventType}`);
+
+    // --- Handle different event types ---
     if (eventType === 'user.created' || eventType === 'user.updated') {
-      // Type Guard: We know evt.data is a UserJSON here
-      const user = evt.data as UserJSON; // Cast to Clerk's UserJSON type
+      const user = evt.data as UserJSON;
 
       const userId = user.id;
-      // Use nullish coalescing (??) for default values to handle potential null/undefined
       const email = user.email_addresses?.[0]?.email_address ?? '';
       const phone = user.phone_numbers?.[0]?.phone_number ?? null;
-      const firstName = user.first_name ?? ''; // Use nullish coalescing for names
+      const firstName = user.first_name ?? '';
       const lastName = user.last_name ?? '';
-      const fullName = `${firstName} ${lastName}`.trim();
+      const fullName = `${firstName} ${lastName}`.trim() || 'Unknown User';
 
-      // Get role from public_metadata with validation
-      const roleFromMetadata = (user.public_metadata as { role?: string })?.role; // Cast public_metadata to access 'role'
-      let role: UserRole = UserRole.VENDOR; // Default role
+      const roleFromMetadata = (user.public_metadata as { role?: string })?.role;
+      let role: UserRole = UserRole.VENDOR;
 
-      // Validate the role against your Prisma UserRole enum
       if (roleFromMetadata && Object.values(UserRole).includes(roleFromMetadata as UserRole)) {
         role = roleFromMetadata as UserRole;
       } else {
@@ -91,7 +86,7 @@ export async function POST(req: NextRequest) {
       }
 
       if (!userId) {
-        console.error('[Webhook] User ID is missing for user.created/updated event. Cannot process.');
+        console.error('[Webhook] User ID is missing');
         return new NextResponse('User ID missing', { status: 400 });
       }
 
@@ -108,6 +103,7 @@ export async function POST(req: NextRequest) {
               updated_at: new Date(),
             },
           });
+          console.log(`[Webhook] User created in DB: ${userId} with role: ${role}`);
 
           if (role === UserRole.VENDOR) {
             await prisma.vendor.create({
@@ -118,6 +114,7 @@ export async function POST(req: NextRequest) {
                 updated_at: new Date(),
               },
             });
+            console.log(`[Webhook] Vendor profile created for user: ${userId}`);
           } else if (role === UserRole.SUPPLIER) {
             await prisma.supplier.create({
               data: {
@@ -128,8 +125,10 @@ export async function POST(req: NextRequest) {
                 updated_at: new Date(),
               },
             });
+            console.log(`[Webhook] Supplier profile created for user: ${userId}`);
           }
-        } catch {
+        } catch (error) {
+          console.error(`[Webhook] Error creating user ${userId}:`, error);
           return new NextResponse('Database error during user creation', { status: 500 });
         }
 
@@ -140,7 +139,8 @@ export async function POST(req: NextRequest) {
           });
 
           if (!existingUser) {
-            return new NextResponse('User not found for update', { status: 404 }); // Return 404 if user not in your DB
+            console.error(`[Webhook] User ${userId} not found for update. Skipping.`);
+            return new NextResponse('User not found for update', { status: 404 });
           }
 
           await prisma.user.update({
@@ -153,37 +153,40 @@ export async function POST(req: NextRequest) {
               updated_at: new Date(),
             },
           });
+          console.log(`[Webhook] User updated in DB: ${userId} with new role: ${role}`);
 
-          // Handle role changes: delete old profile, create new one
           if (existingUser.role_type !== role) {
+            console.log(`[Webhook] Role changed for user ${userId} from ${existingUser.role_type} to ${role}. Updating profiles.`);
 
-            // Delete old profile (using deleteMany for robustness in case of multiple entries, though unlikely)
             if (existingUser.role_type === UserRole.VENDOR) {
               await prisma.vendor.deleteMany({ where: { user_id: userId } });
+              console.log(`[Webhook] Deleted old Vendor profile for ${userId}`);
             } else if (existingUser.role_type === UserRole.SUPPLIER) {
               await prisma.supplier.deleteMany({ where: { user_id: userId } });
+              console.log(`[Webhook] Deleted old Supplier profile for ${userId}`);
             }
 
-            // Create new profile
             if (role === UserRole.VENDOR) {
               await prisma.vendor.create({
                 data: {
                   user_id: userId,
-                  area_group_id: 1, // TODO: Replace with actual default area group ID
+                  area_group_id: 1,
                   created_at: new Date(),
                   updated_at: new Date(),
                 },
               });
+              console.log(`[Webhook] Created new Vendor profile for ${userId}`);
             } else if (role === UserRole.SUPPLIER) {
               await prisma.supplier.create({
                 data: {
                   user_id: userId,
-                  business_name: 'New Business', // TODO: Implement proper business name collection
+                  business_name: 'New Business',
                   verification_status: VerificationStatus.PENDING,
                   created_at: new Date(),
                   updated_at: new Date(),
                 },
               });
+              console.log(`[Webhook] Created new Supplier profile for ${userId}`);
             }
           }
         } catch (error) {
@@ -192,24 +195,21 @@ export async function POST(req: NextRequest) {
         }
       }
     }
-    // --- User Event: user.deleted ---
     else if (eventType === 'user.deleted') {
-      // For 'user.deleted' events, evt.data is a simple object with 'id'.
       const userId = evt.data.id;
 
       if (!userId) {
-        console.error('[Webhook] User ID is missing for deletion event. Cannot process.');
+        console.error('[Webhook] User ID is missing for deletion');
         return new NextResponse('User ID missing', { status: 400 });
       }
 
       try {
-        // Delete user (Prisma's onDelete: CASCADE in your schema should handle related records)
         await prisma.user.delete({
           where: { id: userId },
         });
+        console.log(`[Webhook] User deleted from DB: ${userId}`);
       } catch (error) {
         console.error(`[Webhook] Error deleting user ${userId}:`, error);
-        // If the record doesn't exist (e.g., already deleted), that's fine.
         if (error instanceof Error && error.message.includes('Record to delete does not exist')) {
           console.warn(`[Webhook] User ${userId} already deleted or not found in DB.`);
         } else {
@@ -217,44 +217,23 @@ export async function POST(req: NextRequest) {
         }
       }
     }
-    // --- Email Events: email.created, email.updated, email.deleted ---
-    // These events' data structure is typically EmailAddressJSON.
-    else if (eventType.startsWith('email.')) { // Catch all email events
-      const emailData = evt.data as EmailAddress; // Cast to Clerk's EmailAddressJSON type
-      //
-      // IMPORTANT: Your 'users' table only stores a single 'email'.
-      // If you need to track ALL email addresses a user has (primary, secondary, etc.),
-      // you would need a separate 'UserEmail' table in your Prisma schema.
-      // These handlers are placeholders for such a scenario.
-      //
-      // Example:
-      // if (eventType === 'email.created') {
-      //   await prisma.userEmail.create({ data: { id: emailData.id, userId: emailData.user_id, emailAddress: emailData.email_address, verified: emailData.verified } });
-      // } else if (eventType === 'email.updated') {
-      //   await prisma.userEmail.update({ where: { id: emailData.id }, data: { emailAddress: emailData.email_address, verified: emailData.verified } });
-      // } else if (eventType === 'email.deleted') {
-      //   await prisma.userEmail.delete({ where: { id: emailData.id } });
-      // }
-      //
-      // For now, just acknowledge these events
+    else if (eventType.startsWith('email.')) {
+      const emailData = evt.data as EmailAddress;
+      console.log(`[Webhook] Email event (${eventType}): ${emailData.emailAddress}`);
       return new NextResponse('Email event handled (no DB update)', { status: 200 });
     }
-    // --- End Email Events ---
-
-    // --- Unhandled Event Types ---
     else {
+      console.log(`[Webhook] Unhandled event type: ${eventType}. Returning 200 to acknowledge.`);
       return new NextResponse('Unhandled event type', { status: 200 });
     }
 
-    // 3. Return success response for all handled events
     return new NextResponse('Success', { status: 200 });
 
   } catch (error) {
-    // 4. Catch any unexpected errors during webhook processing
     console.error('[Webhook] Unexpected error during webhook processing:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   } finally {
-    // 5. Ensure Prisma client is disconnected
+    // Ensure Prisma client is disconnected
     await prisma.$disconnect();
   }
 }
