@@ -4,13 +4,9 @@ import React from 'react';
 // import { Button } from "@/components/ui/button";
 // import { Card } from "@/components/ui/card";
 
-interface PoolDetailPageProps {
-  params: {
-    poolId: string;
-  };
-}
-
-export default function PoolDetailPage({ params }: PoolDetailPageProps) {
+// The separate interface is removed.
+// The type for props is now defined directly here.
+export default function PoolDetailPage({ params }: { params: { poolId: string } }) {
   const { poolId } = params;
   
   // TODO: Fetch details for the specific pooled_order using the poolId
@@ -28,4 +24,4 @@ export default function PoolDetailPage({ params }: PoolDetailPageProps) {
       </div>
     </div>
   );
-} 
+}
