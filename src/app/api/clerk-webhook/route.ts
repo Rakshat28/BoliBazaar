@@ -5,7 +5,7 @@ import { Webhook } from 'svix';
 import { UserRole, VerificationStatus } from '@prisma/client'; // Removed PrismaClient import here
 
 // Import your singleton Prisma client instance
-import prisma from '@/lib/prisma'; // <--- IMPORTANT: Use your singleton here
+import {prisma} from '@/lib/prisma'; // <--- IMPORTANT: Use your singleton here
 
 // Import Clerk's specific event types for better type safety
 import type { UserJSON, EmailAddress, WebhookEvent as ClerkWebhookEvent } from '@clerk/nextjs/server';
