@@ -1,36 +1,28 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+BoliBazaar – Empowering Local Street Vendors Through Smart Sourcing
+BoliBazaar is a digital platform designed to streamline the procurement process for local street food vendors in India by enabling collective bargaining and bulk purchasing from trusted suppliers.
 
-## Getting Started
+*Key Features
+  Vendor Collectives: Vendors in the same area can form groups to pool their raw material needs.
+  Bulk Ordering System: Grouped demand allows vendors to place high-volume orders.
+  Supplier Bidding: Verified suppliers compete to offer the best price for bulk orders.
+  Verified Deals: Vendors get access to reliable, cost-effective raw materials without middlemen.
 
-First, run the development server:
+*How It Works
+-Form Local Collectives
+Vendors in the same locality connect and form a buying group.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+-Create Bulk Orders
+Vendors collectively list required materials (e.g., oil, vegetables, spices).
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+-Receive Supplier Bids
+Suppliers submit quotes for fulfilling the bulk order.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+-Choose Best Deal
+The vendor group picks the most affordable and trusted supplier.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+Tech Stack
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+*Purpose
+To reduce the burden on small vendors who often face high costs and limited access to quality suppliers. BoliBazaar helps them save money, increase trust, and buy smarter together.
