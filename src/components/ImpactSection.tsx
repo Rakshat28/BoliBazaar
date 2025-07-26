@@ -1,5 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, Target, Shield, CheckCircle } from "lucide-react";
+import Image from 'next/image';
 
 const ImpactSection = () => {
   const impacts = [
@@ -112,9 +113,11 @@ const ImpactSection = () => {
 
           {/* Visual */}
           <div className="relative animate-scale-in">
-            <img
+            <Image
               src="/impact.png"
               alt="Community network showing platform impact"
+              width={800}
+              height={480}
               className="w-full h-auto rounded-2xl shadow-lg"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background/20 to-transparent rounded-2xl"></div>
