@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Users, TrendingUp } from "lucide-react";
+import Image from 'next/image';
 
 const HeroSection = () => {
   return (
@@ -61,9 +62,11 @@ const HeroSection = () => {
           {/* Image */}
           <div className="relative">
             <div className="animate-scale-in">
-              <img
+              <Image
                 src="/hero.png"
                 alt="Street food vendors collaborating through digital platform"
+                width={800}
+                height={480}
                 className="w-full h-auto rounded-2xl shadow-2xl"
               />
             </div>

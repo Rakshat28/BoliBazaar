@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Users, ShoppingCart, Gavel, Truck, ArrowRight } from "lucide-react";
+import Image from 'next/image';
 
 const SolutionSection = () => {
   const steps = [
@@ -41,9 +42,11 @@ const SolutionSection = () => {
         <div className="grid lg:grid-cols-2 gap-16 items-center mb-20">
           {/* Image */}
           <div className="order-2 lg:order-1 animate-scale-in">
-            <img
+            <Image
               src="/solution.png"
               alt="Digital platform connecting vendors and suppliers"
+              width={800}
+              height={480}
               className="w-full h-auto rounded-2xl shadow-2xl"
             />
           </div>
