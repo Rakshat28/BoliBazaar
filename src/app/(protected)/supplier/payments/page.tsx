@@ -82,15 +82,16 @@ export default function page(){
     .reduce((sum, payment) => sum + payment.amount, 0);
 
   return (
-    <div className="container mx-auto border shadow-sm mt-8 rounded-xl p-6 size-sm">
+    <div className="flex justify-center w-full overflow-x-hidden">
+      <div className="container mx-auto border shadow-sm mt-8 rounded-xl p-6 size-sm overflow-x-hidden">
 
-      <div className="border p-4 rounded-2xl mb-6">
-            <h1 className="text-4xl font-bold text-gray-900 pb-4 border-b border-gray-200 mb-8">
+      <div className="border p-4 rounded-2xl mb-6 overflow-x-hidden">
+            <h1 className="text-md md:text-lg font-semibold text-gray-700 mb-2">
                 Payments Received
             </h1>
 
             {/* Summary Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 ">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 overflow-x-hidden">
                 <Card className="bg-white p-6 rounded-xl shadow-md">
                 <div className="text-center">
                     <h3 className="text-lg font-semibold text-gray-700 mb-2">Total Received</h3>
@@ -144,6 +145,7 @@ export default function page(){
           })}
         </div>
       </div>
+    </div>
     </div>
   )
 }

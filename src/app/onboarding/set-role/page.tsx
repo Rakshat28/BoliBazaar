@@ -32,7 +32,7 @@ const SetRolePage = () => {
       if (currentRole) {
         setStatusMessage('Role already set. Redirecting...');
         localStorage.removeItem('selectedRoleForSignup');
-        router.replace(currentRole === 'vendor' ? '/vendor/dashboard' : '/supplier/dashboard');
+        router.replace(currentRole === 'vendor' ? '/vendor/dashboard' : '/supplier/orders');
         return;
       }
 
@@ -64,7 +64,7 @@ const SetRolePage = () => {
         setStatusMessage(`Role set as ${storedRole}. Redirecting...`);
         localStorage.removeItem('selectedRoleForSignup');
 
-        router.replace(storedRole === 'vendor' ? '/vendor/dashboard' : '/supplier/dashboard');
+        router.replace(storedRole === 'vendor' ? '/vendor/dashboard' : '/supplier/orders');
       } catch (err) {
         console.error('Failed to update user role:', err);
         setErrorMessage('Failed to set your role. Please try again or contact support.');
