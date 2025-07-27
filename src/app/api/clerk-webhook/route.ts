@@ -12,7 +12,7 @@ import {
 
 const prisma = new PrismaClient();
 
-const CLERK_WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET || "";
+const CLERK_WEBHOOK_SECRET_KEY = process.env.CLERK_WEBHOOK_SECRET_KEY || "";
 
 export async function POST(req: Request) {
   const payload = await req.text();
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
   const svix_timestamp = headerPayload.get("svix-timestamp")!;
   const svix_signature = headerPayload.get("svix-signature")!;
 
-  const wh = new Webhook(CLERK_WEBHOOK_SECRET);
+  const wh = new Webhook(CLERK_WEBHOOK_SECRET_KEY);
 
   let evt: WebhookEvent;
 
