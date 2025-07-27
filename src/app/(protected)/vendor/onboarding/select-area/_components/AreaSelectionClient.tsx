@@ -48,11 +48,7 @@ export function AreaSelectionClient({ cities }: { cities: City[] }) {
   const [mapZoom, setMapZoom] = useState(10);
 
   const selectedCity = useMemo(() => cities.find(c => c.id === Number(selectedCityId)), [cities, selectedCityId]);
-  
-  // CORRECTED SYNTAX: 'of' has been removed.
   const selectedAreaGroup = useMemo(() => areaGroups.find(ag => ag.id === Number(selectedAreaGroupId)), [areaGroups, selectedAreaGroupId]);
-  
-  // The useEffect to fetch cities has been removed.
   
   // Fetch area groups when a city is selected
   useEffect(() => {
@@ -84,39 +80,22 @@ export function AreaSelectionClient({ cities }: { cities: City[] }) {
     if (!selectedAreaGroupId) return;
     setIsSaving(true);
     
-    const response = await fetch('/api/vendor/profile', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ areaGroupId: parseInt(selectedAreaGroupId) }),
-    });
-
-    if (response.ok) {
-      router.push('/vendor/dashboard');
-    } else {
-      console.error("Failed to save area group");
-      setIsSaving(false);
-    }
-  };
-
-  const handleAreaSelect = async (areaGroupId: number) => {
     try {
-      const response = await fetch('/api/vendor/onboarding/update-area', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ areaGroupId }),
+      const response = await fetch('/api/vendor/profile', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ areaGroupId: parseInt(selectedAreaGroupId) }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to update area');
+      if (response.ok) {
+        router.push('/vendor/dashboard');
+      } else {
+        console.error("Failed to save area group");
+        setIsSaving(false);
       }
-
-      // Redirect to dashboard after successful area selection
-      router.push('/vendor/dashboard');
     } catch (error) {
-      console.error('Error updating area:', error);
-      // Handle error (show toast, etc.)
+      console.error('Error saving area selection:', error);
+      setIsSaving(false);
     }
   };
 

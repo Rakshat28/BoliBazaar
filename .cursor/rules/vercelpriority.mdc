@@ -1,0 +1,4 @@
+---
+description: The code should be vercel safe , it should not fail when we run vercel build, keep best nextjs code practices in mind
+alwaysApply: false
+---
