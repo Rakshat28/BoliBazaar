@@ -2,52 +2,47 @@
 import { headers } from 'next/headers';
 import { NextRequest, NextResponse } from 'next/server';
 import { Webhook } from 'svix';
-import { UserRole, VerificationStatus } from '@prisma/client'; // Removed PrismaClient import here
-
-// Import your singleton Prisma client instance
-import {prisma} from '@/lib/prisma'; // <--- IMPORTANT: Use your singleton here
+import { UserRole, VerificationStatus } from '@prisma/client';
 
 // Import Clerk's specific event types for better type safety
+// Corrected: EmailAddress instead of EmailAddressJSON
 import type { UserJSON, EmailAddress, WebhookEvent as ClerkWebhookEvent } from '@clerk/nextjs/server';
+
+// Initialize Prisma client
+import {prisma} from '@/lib/prisma'// Keeping this here for now, as the previous fix was about lazy init inside POST.
+                                   // If the error persists after this fix, we revert to lazy init.
 
 // Define a more accurate custom interface for the webhook event
 interface CustomWebhookEvent {
-  data: UserJSON | { id: string } | EmailAddress;
+  data: UserJSON | { id: string } | EmailAddress; // Corrected: EmailAddress
   object: 'event';
   type: string;
 }
 
 export async function POST(req: NextRequest) {
   try {
-    // Get the headers
     const headerPayload = await headers();
     const svix_id = headerPayload.get("svix-id");
     const svix_timestamp = headerPayload.get("svix-timestamp");
     const svix_signature = headerPayload.get("svix-signature");
 
-    // If there are no headers, error out
     if (!svix_id || !svix_timestamp || !svix_signature) {
       return new NextResponse('Error occured -- no svix headers', {
         status: 400
       });
     }
 
-    // Get the body
     const payload = await req.text();
 
-    // Create a new Svix instance with your secret.
     const WEBHOOK_SECRET = process.env.CLERK_WEBHOOK_SECRET;
     if (!WEBHOOK_SECRET) {
-      // This error means the env var is missing during execution.
-      // If this happens during build, it means the variable isn't available at build time.
       console.error('CLERK_WEBHOOK_SECRET is not set in environment variables.');
-      return new NextResponse('Server configuration error', { status: 500 });
+      return new NextResponse('Server configuration error: Webhook secret missing', { status: 500 });
     }
     const wh = new Webhook(WEBHOOK_SECRET);
 
     let evt: CustomWebhookEvent;
 
-    // Verify the payload with the headers
     try {
       evt = wh.verify(payload, {
         "svix-id": svix_id,
@@ -62,12 +57,11 @@ export async function POST(req: NextRequest) {
     }
 
     const eventType = evt.type;
-
     console.log(`[Webhook] Received event: ${eventType}`);
 
     // --- Handle different event types ---
     if (eventType === 'user.created' || eventType === 'user.updated') {
-      const user = evt.data as UserJSON;
+      const user = evt.data as UserJSON; // Correctly cast to UserJSON
 
       const userId = user.id;
       const email = user.email_addresses?.[0]?.email_address ?? '';
@@ -109,7 +103,7 @@ export async function POST(req: NextRequest) {
             await prisma.vendor.create({
               data: {
                 user_id: userId,
-                area_group_id: 1, // TODO: Replace with actual default area group ID
+                area_group_id: 1,
                 created_at: new Date(),
                 updated_at: new Date(),
               },
@@ -119,7 +113,7 @@ export async function POST(req: NextRequest) {
             await prisma.supplier.create({
               data: {
                 user_id: userId,
-                business_name: 'New Business', // TODO: Implement proper business name collection
+                business_name: 'New Business',
                 verification_status: VerificationStatus.PENDING,
                 created_at: new Date(),
                 updated_at: new Date(),
@@ -218,8 +212,9 @@ export async function POST(req: NextRequest) {
       }
     }
     else if (eventType.startsWith('email.')) {
+      // Corrected: Cast to EmailAddress
       const emailData = evt.data as EmailAddress;
-      console.log(`[Webhook] Email event (${eventType}): ${emailData.emailAddress}`);
+      console.log(`[Webhook] Email event (${eventType}) : ${emailData.emailAddress}`);
       return new NextResponse('Email event handled (no DB update)', { status: 200 });
     }
     else {
@@ -233,7 +228,6 @@ export async function POST(req: NextRequest) {
     console.error('[Webhook] Unexpected error during webhook processing:', error);
     return new NextResponse('Internal Server Error', { status: 500 });
   } finally {
-    // Ensure Prisma client is disconnected
     await prisma.$disconnect();
   }
 }
