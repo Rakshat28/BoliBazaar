@@ -1,3 +1,4 @@
+// src/app/(protected)/vendor/dashboard/page.tsx
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, Package, DollarSign, Users, ShoppingCart } from "lucide-react";
@@ -6,22 +7,33 @@ import { cookies } from "next/headers";
 
 // This server-side function fetches the dashboard data before rendering the page.
 async function getDashboardStats() {
-  // FIXME: The fetch call currently works without passing cookies because the API
-  // uses a hardcoded userId. Once Clerk is live, the real user's session cookie
-  // MUST be forwarded for the backend to identify them. The necessary code is here but commented out.
-  // const cookieHeader = cookies().toString();
-  
-  const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/vendor/dashboard`, {
-    // headers: { Cookie: cookieHeader },
-    cache: 'no-store', // Ensures we always get the latest data
-  });
+  try {
+    // Properly await the cookies
+    const cookieStore = cookies();
+    const cookieHeader = cookieStore.toString();
+    
+    if (!process.env.NEXT_PUBLIC_URL) {
+      throw new Error('NEXT_PUBLIC_URL is not defined');
+    }
 
-  if (!response.ok) {
-    console.error("Failed to fetch dashboard stats:", response.status, response.statusText);
+    const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/vendor/dashboard`, {
+      headers: { 
+        Cookie: cookieHeader,
+        'Content-Type': 'application/json'
+      },
+      cache: 'no-store',
+    });
+
+    if (!response.ok) {
+      console.error("Failed to fetch dashboard stats:", response.status, response.statusText);
+      return { activePools: 0, successfulPools: 0, totalSaved: "₹0" };
+    }
+    
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching dashboard stats:", error);
     return { activePools: 0, successfulPools: 0, totalSaved: "₹0" };
   }
-  
-  return response.json();
 }
 
 // This is an async Server Component.
@@ -78,4 +90,4 @@ export default async function VendorDashboardPage() {
       </Card>
     </>
   );
-} 
+}
