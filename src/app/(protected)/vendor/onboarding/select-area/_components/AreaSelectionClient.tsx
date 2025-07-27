@@ -98,10 +98,32 @@ export function AreaSelectionClient({ cities }: { cities: City[] }) {
     }
   };
 
+  const handleAreaSelect = async (areaGroupId: number) => {
+    try {
+      const response = await fetch('/api/vendor/onboarding/update-area', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ areaGroupId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to update area');
+      }
+
+      // Redirect to dashboard after successful area selection
+      router.push('/vendor/dashboard');
+    } catch (error) {
+      console.error('Error updating area:', error);
+      // Handle error (show toast, etc.)
+    }
+  };
+
   return (
     <div className="flex h-screen">
       <div className="w-full md:w-1/3 p-8 flex flex-col bg-white">
-        <h1 className="text-3xl font-bold mb-2">Welcome to Boli-Lagao</h1>
+        <h1 className="text-3xl font-bold mb-2">Welcome to Boli Bazaar</h1>
         <p className="text-muted-foreground mb-8">Let&apos;s set up your primary area of operation.</p>
         
         <div className="space-y-6">

@@ -57,14 +57,24 @@ export default clerkMiddleware(async (auth, request) => {
       where: { user_id: userId },
     });
 
-    // If their profile is incomplete, force them to the onboarding page
-    if (vendor && !vendor.area_group_id && !isOnboardingPage) {
+    // If vendor profile doesn't exist, create it
+    if (!vendor) {
+      await prisma.vendor.create({
+        data: {
+          user_id: userId,
+          area_group_id: 0, // Temporary value
+        },
+      });
+    }
+
+    // If their profile is incomplete (no area_group_id or area_group_id is 0), force them to onboarding
+    if ((!vendor?.area_group_id || vendor.area_group_id === 0) && !isOnboardingPage) {
       const onboardingUrl = new URL('/vendor/onboarding/select-area', request.url);
       return NextResponse.redirect(onboardingUrl);
     }
 
     // If their profile is complete but they are on the onboarding page, send them to the dashboard
-    if (vendor && vendor.area_group_id && isOnboardingPage) {
+    if (vendor?.area_group_id && vendor.area_group_id !== 0 && isOnboardingPage) {
       const dashboardUrl = new URL('/vendor/dashboard', request.url);
       return NextResponse.redirect(dashboardUrl);
     }

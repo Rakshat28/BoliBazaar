@@ -8,7 +8,8 @@ async function getAvailablePools() {
   // FIXME: The fetch call currently works without passing cookies because the API
   // uses a hardcoded userId. Once Clerk is live, the real user's session cookie
   // MUST be forwarded for the backend to identify them.
-   const cookieHeader = cookies().toString();
+  const cookieStore = await cookies();
+  const cookieHeader = cookieStore.toString();
   
   const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/vendor/pools`, {
      headers: { Cookie: cookieHeader },

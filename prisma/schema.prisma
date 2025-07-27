@@ -119,8 +119,8 @@ model Product {
 model Vendor {
   user_id          String    @id // user_id is the PK and FK
   user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  area_group_id    Int
-  areaGroup        AreaGroup @relation(fields: [area_group_id], references: [id])
+  area_group_id    Int?      // Make it nullable initially
+  areaGroup        AreaGroup? @relation(fields: [area_group_id], references: [id])
   reputation_score Decimal   @default(5.00) @db.Decimal(3, 2) // NUMERIC(3, 2)
   created_at       DateTime  @default(now())
   updated_at       DateTime  @updatedAt

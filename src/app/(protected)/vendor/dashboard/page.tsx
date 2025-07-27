@@ -9,7 +9,7 @@ import { cookies } from "next/headers";
 async function getDashboardStats() {
   try {
     // Properly await the cookies
-    const cookieStore = cookies();
+    const cookieStore = await cookies();
     const cookieHeader = cookieStore.toString();
     
     if (!process.env.NEXT_PUBLIC_URL) {

@@ -3,27 +3,33 @@ import prisma from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 
 export async function GET() {
-  // FIXME: This is a temporary placeholder for testing.
-  // Once Clerk authentication is fully implemented and tested on the frontend,
-  // this line should be replaced with the one below it to get the real logged-in user.
-  const userId = "user_2i3B2aBcDeFgHiJkLmNoPqRsTuV"; // Replace with a valid user_id from your 'vendors' table for testing
-  // const { userId } = await auth();
-
-  if (!userId) {
-    return new NextResponse("Unauthorized", { status: 401 });
-  }
-
   try {
+    //FIXME:
+    // Get the real authenticated user
+    const { userId } = await auth();
+
+    if (!userId) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Find the vendor profile
     const vendor = await prisma.vendor.findUnique({
       where: { user_id: userId },
+      include: {
+        areaGroup: true,
+      },
     });
 
     if (!vendor) {
-      return new NextResponse("Vendor profile not found for the provided user ID", { status: 404 });
+      return new NextResponse("Vendor profile not found", { status: 404 });
+    }
+
+    // Check if vendor has completed onboarding (has area_group_id)
+    if (!vendor.area_group_id || vendor.area_group_id === 0) {
+      return new NextResponse("Vendor onboarding incomplete", { status: 400 });
     }
 
     // --- Real Database Queries for Dashboard Stats ---
-
     const activePoolsCount = await prisma.pooledOrder.count({
       where: {
         area_group_id: vendor.area_group_id,
@@ -37,18 +43,14 @@ export async function GET() {
     const successfulPoolsCount = await prisma.orderItem.count({
       where: {
         vendor_id: userId,
-        status: 'DELIVERED', // Counting delivered orders as successful participations
+        status: 'DELIVERED',
         pooledOrder: {
           created_at: { gte: thirtyDaysAgo },
         },
       },
     });
     
-    // TODO: Implement a robust savings calculation.
-    // This will require comparing the `final_price_per_unit` from won orders
-    // against a benchmark market price for that product on that day.
-    // Returning 0 until this logic is built.
-    const totalSaved = 0;
+    const totalSaved = 0; // TODO: Implement savings calculation
 
     const dashboardStats = {
       activePools: activePoolsCount,
