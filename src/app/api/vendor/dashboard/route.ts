@@ -4,7 +4,6 @@ import { auth } from '@clerk/nextjs/server';
 
 export async function GET() {
   try {
-    //FIXME:
     // Get the real authenticated user
     const { userId } = await auth();
 
@@ -20,13 +19,28 @@ export async function GET() {
       },
     });
 
+    console.log('Dashboard API: Vendor profile found:', vendor);
+
+    // If vendor profile doesn't exist, return default stats
     if (!vendor) {
-      return new NextResponse("Vendor profile not found", { status: 404 });
+      console.log('Dashboard API: No vendor profile found, returning default stats');
+      const defaultStats = {
+        activePools: 0,
+        successfulPools: 0,
+        totalSaved: "₹0",
+      };
+      return NextResponse.json(defaultStats);
     }
 
-    // Check if vendor has completed onboarding (has area_group_id)
-    if (!vendor.area_group_id || vendor.area_group_id === 0) {
-      return new NextResponse("Vendor onboarding incomplete", { status: 400 });
+    // If vendor hasn't completed onboarding, return default stats
+    if (!vendor.area_group_id) {
+      console.log('Dashboard API: Vendor onboarding incomplete, returning default stats');
+      const defaultStats = {
+        activePools: 0,
+        successfulPools: 0,
+        totalSaved: "₹0",
+      };
+      return NextResponse.json(defaultStats);
     }
 
     // --- Real Database Queries for Dashboard Stats ---
@@ -58,10 +72,17 @@ export async function GET() {
       totalSaved: `₹${totalSaved}`,
     };
 
+    console.log('Dashboard API: Returning stats:', dashboardStats);
     return NextResponse.json(dashboardStats);
 
   } catch (error) {
     console.error("[VENDOR_DASHBOARD_GET]", error);
-    return new NextResponse("Internal Server Error", { status: 500 });
+    // Return default stats instead of error
+    const defaultStats = {
+      activePools: 0,
+      successfulPools: 0,
+      totalSaved: "₹0",
+    };
+    return NextResponse.json(defaultStats);
   }
 }
