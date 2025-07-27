@@ -4,9 +4,10 @@ import { Card } from '@/components/ui/card';
 
 const page = () => {
   return (
-      <div className="container mx-auto p-6 size-sm">
+      <div className="flex justify-center w-full overflow-x-hidden">
+        <div className=" mx-auto p-6 size-sm overflow-x-hidden">
       <VendorTable />
-       <div className="grid grid-cols-3 gap-6 mt-3">
+       <div className="grid grid-cools-1 md:grid-cols-3 gap-6 mt-3 overflow-x-hidden">
         <Card className="bg-white p-6 rounded-xl shadow-md">
           <div className="text-center">
             <h3 className="text-md md:text-lg font-semibold text-gray-700 mb-2">Total Orders</h3>
@@ -21,7 +22,7 @@ const page = () => {
             </div>
           </div>
         </Card>
-        <Card className="bg-white p-6 rounded-xl shadow-md">
+        <Card className="bg-white p-6 rounded-xl shadow-md ">
           <div className="text-center">
             <h3 className="text-md md:text-lg font-semibold text-gray-700 mb-2">Unpaid Orders</h3>
             <div className="text-xl md:text-3xl font-bold text-red-600">
@@ -32,6 +33,7 @@ const page = () => {
       </div>
      
     </div>
+      </div>
   )
 }
 

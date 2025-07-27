@@ -42,7 +42,7 @@ export async function POST(req: Request) {
   if (eventType === "user.created" || eventType === "user.updated") {
     const user = evt.data as UserJSON;
 
-    const role = (user.private_metadata?.role || "VENDOR") as UserRole;
+    const role = (user.public_metadata?.role ) as UserRole;
 
     await prisma.user.upsert({
       where: { id: user.id },

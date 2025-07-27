@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { SidebarTrigger } from "./ui/sidebar";
 import { useRouter } from "next/navigation";
 import RoleSelectionModal from "./RoleSelectionModal";
 import { Button } from "./ui/button";
