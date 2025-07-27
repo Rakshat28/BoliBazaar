@@ -1,55 +1,81 @@
-'use client';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { TrendingUp, Package, DollarSign } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, Package, DollarSign, Users, ShoppingCart } from "lucide-react";
 import Link from "next/link";
+import { cookies } from "next/headers";
 
-export default function VendorDashboardPage() {
+// This server-side function fetches the dashboard data before rendering the page.
+async function getDashboardStats() {
+  // FIXME: The fetch call currently works without passing cookies because the API
+  // uses a hardcoded userId. Once Clerk is live, the real user's session cookie
+  // MUST be forwarded for the backend to identify them. The necessary code is here but commented out.
+  // const cookieHeader = cookies().toString();
+  
+  const response = await fetch(`${process.env.NEXT_PUBLIC_URL}/api/vendor/dashboard`, {
+    // headers: { Cookie: cookieHeader },
+    cache: 'no-store', // Ensures we always get the latest data
+  });
+
+  if (!response.ok) {
+    console.error("Failed to fetch dashboard stats:", response.status, response.statusText);
+    return { activePools: 0, successfulPools: 0, totalSaved: "₹0" };
+  }
+  
+  return response.json();
+}
+
+// This is an async Server Component.
+export default async function VendorDashboardPage() {
+  const stats = await getDashboardStats();
+
   const dashboardStats = [
-    { title: "Active Pools in Your Area", value: "12", icon: Package, description: "Pools available to join" },
-    { title: "Orders Won This Month", value: "8", icon: TrendingUp, description: "Successful participations" },
-    { title: "Total Saved (Est.)", value: "₹4,250", icon: DollarSign, description: "Money saved this month" }
+    { title: "Active Pools in Your Area", value: stats.activePools, icon: Users, description: "Pools available to join now" },
+    { title: "Successful Pools This Month", value: stats.successfulPools, icon: ShoppingCart, description: "Completed group purchases" },
+    { title: "Total Saved (Est.)", value: stats.totalSaved, icon: DollarSign, description: "Compared to market rates" }
   ];
 
   const quickActions = [
       { title: "Browse Pools", href: "/vendor/pools", icon: Package },
-      { title: "Check Orders", href: "/vendor/orders", icon: TrendingUp },
-      { title: "Add Funds", href: "/vendor/wallet", icon: DollarSign },
-      { title: "View History", href: "/vendor/orders", icon: Package },
+      { title: "Check My Orders", href: "/vendor/orders", icon: ShoppingCart },
   ];
 
   return (
     <>
-      <h1 className="text-3xl font-bold tracking-tight mb-6">Dashboard</h1>
+      <div className="mb-8">
+        <h1 className="text-4xl font-extrabold text-gray-900 dark:text-white">Dashboard</h1>
+        <p className="text-lg text-gray-500 dark:text-gray-400">Welcome back, here&apos;s a summary of your activity.</p>
+      </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {dashboardStats.map((stat, index) => (
-          <Card key={index}>
+          <Card key={index} className="rounded-xl shadow-md">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">{stat.title}</CardTitle>
-              <stat.icon className="h-4 w-4 text-muted-foreground" />
+              <CardTitle className="text-lg font-semibold text-gray-700">{stat.title}</CardTitle>
+              <stat.icon className="h-6 w-6 text-teal-600" />
             </CardHeader>
             <CardContent>
-              <div className="text-4xl font-bold text-primary">{stat.value}</div>
-              <p className="text-xs text-muted-foreground">{stat.description}</p>
+              <div className="text-4xl font-bold text-teal-600">{stat.value}</div>
+              <p className="text-sm text-gray-500 mt-1">{stat.description}</p>
             </CardContent>
           </Card>
         ))}
       </div>
 
-      <div className="mt-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-xl font-semibold">Quick Actions</CardTitle>
-          </CardHeader>
-          <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <Card className="mt-8 rounded-xl shadow-md">
+        <CardHeader>
+          <CardTitle className="text-2xl font-semibold text-gray-800">Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex flex-wrap gap-4">
             {quickActions.map(action => (
-                 <Link href={action.href} key={action.title} className="p-4 bg-secondary rounded-lg text-center hover:bg-secondary/80 transition-colors">
-                    <action.icon className="h-8 w-8 text-primary mx-auto mb-2" />
-                    <p className="text-sm font-medium">{action.title}</p>
-                 </Link>
+              <Button asChild size="lg" key={action.title} className="bg-teal-600 hover:bg-teal-700">
+                <Link href={action.href}>
+                  <action.icon className="mr-2 h-5 w-5" /> {action.title}
+                </Link>
+              </Button>
             ))}
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+        </CardContent>
+      </Card>
     </>
   );
 } 

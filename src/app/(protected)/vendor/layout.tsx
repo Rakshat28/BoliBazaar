@@ -11,7 +11,7 @@ export default function VendorLayout({
     <div className="min-h-screen bg-background">
       <VendorSidebar />
       <main className="ml-64 p-4 md:p-6">
-        {/* The content of each vendor page will be rendered here */}
+        {/*TODO: The content of each vendor page will be rendered here */}
         {children}
       </main>
     </div>
