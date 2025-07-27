@@ -1,89 +1,64 @@
-// src/app/api/webhook/clerk/route.ts
-export const runtime = "nodejs";
-import { Webhook } from "svix";
-import { headers } from "next/headers";
-import { NextResponse } from "next/server";
-import { PrismaClient, UserRole } from "@prisma/client";
-import {
-  UserJSON,
-  DeletedObjectJSON,
-  WebhookEvent,
-} from "@clerk/nextjs/server";
+import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
+import { NextResponse } from 'next/server';
 
-const prisma = new PrismaClient();
-
-const CLERK_WEBHOOK_SECRET_KEY = process.env.CLERK_WEBHOOK_SECRET_KEY || "";
-
-export async function POST(req: Request) {
-  const payload = await req.text();
-  const headerPayload = await headers();
-  const svix_id = headerPayload.get("svix-id")!;
-  const svix_timestamp = headerPayload.get("svix-timestamp")!;
-  const svix_signature = headerPayload.get("svix-signature")!;
-
-  const wh = new Webhook(CLERK_WEBHOOK_SECRET_KEY);
-
-  let evt: WebhookEvent;
-
-  try {
-    evt = wh.verify(payload, {
-      "svix-id": svix_id,
-      "svix-timestamp": svix_timestamp,
-      "svix-signature": svix_signature,
-    }) as WebhookEvent;
-  } catch (err) {
-    console.error("Webhook verification failed:", err);
-    return new NextResponse("Invalid signature", { status: 400 });
-  }
-
-  const eventType = evt.type;
-
-  // ---------------- Handle user events ----------------
-  if (eventType === "user.created" || eventType === "user.updated") {
-    const user = evt.data as UserJSON;
-
-    const role = (user.public_metadata?.role ) as UserRole;
-
-    await prisma.user.upsert({
-      where: { id: user.id },
-      update: {
-        email: user.email_addresses[0]?.email_address || "",
-        phone_number: user.phone_numbers[0]?.phone_number || null,
-        full_name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
-        role_type: role,
-      },
-      create: {
-        id: user.id,
-        email: user.email_addresses[0]?.email_address || "",
-        phone_number: user.phone_numbers[0]?.phone_number || null,
-        full_name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
-        role_type: role,
-      },
-    });
-
-    console.log(`User ${eventType === "user.created" ? "created" : "updated"}: ${user.id}`);
-  }
-
-  if (eventType === "user.deleted") {
-    const deleted = evt.data as DeletedObjectJSON;
-
-    await prisma.user.delete({
-      where: { id: deleted.id },
-    });
-
-    console.log(`User deleted: ${deleted.id}`);
-  }
-
-  // ---------------- Handle other events if needed ----------------
-  if (eventType.startsWith("event.")) {
-    console.log(`Event Event Received: ${eventType}`, evt.data);
-    // Add your own logic here...
-  }
-
-  if (eventType.startsWith("role.")) {
-    console.log(`Role Event Received: ${eventType}`, evt.data);
-    // Add your own logic here...
-  }
-
-  return new NextResponse("Webhook processed", { status: 200 });
+interface PublicMetadata {
+  role?: 'vendor' | 'supplier' | 'admin' | string; 
 }
+
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/clerk-webhook(.*)',
+  '/forbidden(.*)',
+  '/onboarding/set-role'
+]);
+
+const isVendorRoute = createRouteMatcher(['/vendor(.*)']);
+
+const isSupplierRoute = createRouteMatcher(['/supplier(.*)']);
+
+export default clerkMiddleware(async (auth, request) => {
+  const { userId, sessionClaims } = await auth();
+  const currentPath = new URL(request.url).pathname;
+
+  if (isPublicRoute(request)) {
+    return NextResponse.next();
+  }
+
+  if (!userId) {
+    const signInUrl = new URL('/sign-in', request.url);
+    signInUrl.searchParams.set('redirect_url', request.url);
+    return NextResponse.redirect(signInUrl);
+  }
+
+  const userRole = (sessionClaims?.publicMetadata as PublicMetadata)?.role;
+  if (!userRole && currentPath !== '/onboarding/set-role') {
+    console.log(`User ${userId} has no role. Redirecting to /onboarding/set-role from ${currentPath}`);
+    return NextResponse.redirect(new URL('/onboarding/set-role', request.url));
+  }
+
+  if (isVendorRoute(request)) {
+    if (userRole === 'vendor') {
+      return NextResponse.next();
+    } else {
+      return NextResponse.redirect(new URL('/forbidden', request.url));
+    }
+  }
+
+  if (isSupplierRoute(request)) {
+    if (userRole === 'supplier') {
+      return NextResponse.next();
+    } else {
+      return NextResponse.redirect(new URL('/forbidden', request.url));
+    }
+  }
+
+  return NextResponse.next();
+});
+
+export const config = {
+  matcher: [
+    '/((?!_next/static|_next/image|favicon.ico|api/webhook/clerk).*)',
+    '/(api|trpc)(.*)',
+  ]}
