@@ -4,12 +4,14 @@ import React from 'react'
 
 const page = () => {
   return (
-    <div className="container mx-auto p-6 size-sm border shadow-sm rounded-xl mt-8">
-      <div className="container border p-4 rounded-2xl ">
-        <ActiveBiddingTable />
-      </div>
-      <div className="container border p-4 rounded-2xl mt-3">
-        <OrderForBidding />
+    <div className="min-h-screen py-10 px-4 flex justify-center items-start w-full overflow-x-hidden">
+      <div className="w-full max-w-5xl space-y-6">
+        <div className="border p-6 rounded-2xl shadow bg-white overflow-x-auto">
+          <ActiveBiddingTable />
+        </div>
+        <div className="border p-6 rounded-2xl shadow bg-white overflow-x-auto">
+          <OrderForBidding />
+        </div>
       </div>
     </div>
   )

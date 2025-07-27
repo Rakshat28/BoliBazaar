@@ -2,72 +2,91 @@ import { clerkMiddleware, createRouteMatcher } from '@clerk/nextjs/server';
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 
-const isProtectedRoute = createRouteMatcher([
-  '/vendor(.*)',
-  '/supplier(.*)',
+interface PublicMetadata {
+  role?: 'vendor' | 'supplier' | 'admin' | string;
+}
+
+const isPublicRoute = createRouteMatcher([
+  '/',
+  '/sign-in(.*)',
+  '/sign-up(.*)',
+  '/api/clerk-webhook(.*)',
+  '/forbidden(.*)',
+  '/onboarding/set-role'
 ]);
 
-// FIXME: You can change this as you wish later , I am less experienced with middleware so I am not sure if this is the best way to do this
-//First, it checks if the user is trying to access a protected route (any URL starting with /vendor or /supplier).
-//If they are, it checks if the user is logged in. If they are not logged in, it immediately stops them and redirects them to the /sign-in page.
-//For any logged-in user, it securely gets their userId and their custom role (e.g., 'VENDOR') from the Clerk session.
+const isVendorRoute = createRouteMatcher(['/vendor(.*)']);
+const isSupplierRoute = createRouteMatcher(['/supplier(.*)']);
+const isProtectedRoute = createRouteMatcher(['/vendor(.*)', '/supplier(.*)']);
 
-//If the vendor is new (meaning they exist in your database but haven't chosen an area_group_id yet), the middleware will forcefully redirect them to the 
-// /vendor/onboarding/select-area page, no matter what other vendor page they try to visit.
-
-//If the vendor is already onboarded (meaning they have an area_group_id), the middleware will allow them to access their dashboard (e.g., /vendor/dashboard)
-//without any further redirection.
-
-export default clerkMiddleware(async (auth, req) => {
-  // Await the result of auth() and then call protect() on the resolved object
+export default clerkMiddleware(async (auth, request) => {
   const authResult = await auth();
+  const { userId, sessionClaims } = authResult;
+  const currentPath = new URL(request.url).pathname;
 
-  if (isProtectedRoute(req)) {
-    if (!authResult.userId) {
-      // If not authenticated, redirect to sign-in page
-      const signInUrl = new URL('/sign-in', req.url);
-      return NextResponse.redirect(signInUrl);
-    }
+  // Public routes are allowed without auth
+  if (isPublicRoute(request)) {
+    return NextResponse.next();
   }
 
-  // Destructure userId and sessionClaims from the resolved authResult
-  const { userId, sessionClaims } = authResult;
+  // Redirect unauthenticated users on protected routes
+  if (isProtectedRoute(request) && !userId) {
+    const signInUrl = new URL('/sign-in', request.url);
+    signInUrl.searchParams.set('redirect_url', request.url);
+    return NextResponse.redirect(signInUrl);
+  }
 
-  // After a user logs in, this logic will run
-  if (userId) {
-    const isOnboardingPage = req.nextUrl.pathname.startsWith('/vendor/onboarding');
-    
-    // FIX 2: Safely check the type of the metadata object
-    const userRole = (sessionClaims?.metadata as { role?: string })?.role;
+  // Role check
+  const userRole = (sessionClaims?.publicMetadata as PublicMetadata)?.role;
 
-    if (userRole === 'VENDOR') {
-      const vendor = await prisma.vendor.findUnique({
-        where: { user_id: userId },
-      });
+  if (!userRole && currentPath !== '/onboarding/set-role') {
+    console.log(`User ${userId} has no role. Redirecting to /onboarding/set-role from ${currentPath}`);
+    return NextResponse.redirect(new URL('/onboarding/set-role', request.url));
+  }
 
-      // Redirect to onboarding if the profile is incomplete
-      if (vendor && !vendor.area_group_id) {
-        if (!isOnboardingPage) {
-          const onboardingUrl = new URL('/vendor/onboarding/select-area', req.url);
-          return NextResponse.redirect(onboardingUrl);
-        }
-      } 
-      // Redirect away from onboarding if the profile is complete
-      else if (vendor && vendor.area_group_id) {
-        if (isOnboardingPage) {
-          const dashboardUrl = new URL('/vendor/dashboard', req.url);
-          return NextResponse.redirect(dashboardUrl);
-        }
+  // Vendor onboarding logic
+  if (userId && userRole === 'vendor') {
+    const isOnboardingPage = currentPath.startsWith('/vendor/onboarding');
+
+    const vendor = await prisma.vendor.findUnique({
+      where: { user_id: userId }
+    });
+
+    if (vendor && !vendor.area_group_id) {
+      if (!isOnboardingPage) {
+        const onboardingUrl = new URL('/vendor/onboarding/select-area', request.url);
+        return NextResponse.redirect(onboardingUrl);
+      }
+    } else if (vendor && vendor.area_group_id) {
+      if (isOnboardingPage) {
+        const dashboardUrl = new URL('/vendor/dashboard', request.url);
+        return NextResponse.redirect(dashboardUrl);
       }
     }
   }
+
+  // Vendor route access control
+  if (isVendorRoute(request)) {
+    if (userRole !== 'vendor') {
+      return NextResponse.redirect(new URL('/forbidden', request.url));
+    }
+  }
+
+  // Supplier route access control
+  if (isSupplierRoute(request)) {
+    if (userRole !== 'supplier') {
+      return NextResponse.redirect(new URL('/forbidden', request.url));
+    }
+  }
+
+  return NextResponse.next();
 });
 
 export const config = {
   matcher: [
-    // Skip Next.js internals and all static files, unless found in search params
-    '/((?!_next|[^?]*\\.(?:html?|css|js(?!on)|jpe?g|webp|png|gif|svg|ttf|woff2?|ico|csv|docx?|xlsx?|zip|webmanifest)).*)',
-    // Always run for API routes
+    // Skip static assets and Next.js internals
+    '/((?!_next/static|_next/image|favicon.ico|api/webhook/clerk).*)',
+    // Include API and tRPC routes
     '/(api|trpc)(.*)',
   ],
 };

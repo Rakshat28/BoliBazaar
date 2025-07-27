@@ -1,13 +1,17 @@
-"use client"
-import React from 'react'
-import { ClerkProvider } from '@clerk/nextjs'
+import { SidebarProvider, SidebarTrigger} from "@/components/ui/sidebar"
+import { AppSidebar } from "@/components/app-sidebar"
+import { ClerkProvider } from "@clerk/nextjs"
 
-const layout = ({children}: {children:React.ReactNode}) => {
+export default function Layout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider>
-        {children}
-    </ClerkProvider>
+    <SidebarProvider>
+      <AppSidebar />
+      <main className="flex-1 flex justify-center overflow-x-hidden">
+        <ClerkProvider>
+          <SidebarTrigger></SidebarTrigger>
+          {children}
+        </ClerkProvider>
+      </main>
+    </SidebarProvider>
   )
 }
-
-export default layout
