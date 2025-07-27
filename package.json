@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
-    "build": "next build",
+    "build": "prisma generate && next build",
     "start": "next start",
     "lint": "next lint"
   },
@@ -58,6 +58,7 @@
     "react-resizable-panels": "^3.0.3",
     "recharts": "^2.15.4",
     "sonner": "^2.0.6",
+    "svix": "^1.69.0",
     "tailwind-merge": "^3.3.1",
     "vaul": "^1.1.2",
     "zod": "^4.0.10"
