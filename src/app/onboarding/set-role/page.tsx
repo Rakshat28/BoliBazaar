@@ -1,89 +1,89 @@
-'use client';
+// src/app/api/webhook/clerk/route.ts
+export const runtime = "nodejs";
+import { Webhook } from "svix";
+import { headers } from "next/headers";
+import { NextResponse } from "next/server";
+import { PrismaClient, UserRole } from "@prisma/client";
+import {
+  UserJSON,
+  DeletedObjectJSON,
+  WebhookEvent,
+} from "@clerk/nextjs/server";
 
-import React, { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
-import { useUser } from '@clerk/nextjs';
+const prisma = new PrismaClient();
 
-import type { Roles } from '../../../../types/globals'; // or wherever your Roles type is
+const CLERK_WEBHOOK_SECRET_KEY = process.env.CLERK_WEBHOOK_SECRET_KEY || "";
 
-const SetRolePage = () => {
-  const router = useRouter();
-  const { isLoaded, isSignedIn, user } = useUser();
+export async function POST(req: Request) {
+  const payload = await req.text();
+  const headerPayload = await headers();
+  const svix_id = headerPayload.get("svix-id")!;
+  const svix_timestamp = headerPayload.get("svix-timestamp")!;
+  const svix_signature = headerPayload.get("svix-signature")!;
 
-  const [statusMessage, setStatusMessage] = useState('Setting up your profile...');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const wh = new Webhook(CLERK_WEBHOOK_SECRET_KEY);
 
-  useEffect(() => {
-    const assignRole = async () => {
-      if (!isLoaded || !isSignedIn) {
-        if (isLoaded && !isSignedIn) {
-          router.replace('/sign-in');
-        }
-        return;
-      }
+  let evt: WebhookEvent;
 
-      if (!user) {
-        setErrorMessage('User data not available.');
-        return;
-      }
+  try {
+    evt = wh.verify(payload, {
+      "svix-id": svix_id,
+      "svix-timestamp": svix_timestamp,
+      "svix-signature": svix_signature,
+    }) as WebhookEvent;
+  } catch (err) {
+    console.error("Webhook verification failed:", err);
+    return new NextResponse("Invalid signature", { status: 400 });
+  }
 
-      // If role already set, redirect
-      const currentRole = user.publicMetadata?.role as Roles | undefined;
-      if (currentRole) {
-        setStatusMessage('Role already set. Redirecting...');
-        localStorage.removeItem('selectedRoleForSignup');
-        router.replace(currentRole === 'vendor' ? '/vendor/dashboard' : '/supplier/orders');
-        return;
-      }
+  const eventType = evt.type;
 
-      // Get stored role
-      const storedRole = localStorage.getItem('selectedRoleForSignup') as Roles | null;
-      if (!storedRole) {
-        setErrorMessage('No role selected. Please start from the landing page.');
-        router.replace('/');
-        return;
-      }
+  // ---------------- Handle user events ----------------
+  if (eventType === "user.created" || eventType === "user.updated") {
+    const user = evt.data as UserJSON;
 
-      try {
-        // Call secure server API to update metadata
-        const res = await fetch('/api/set-role', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            userId: user.id,
-            role: storedRole,
-          }),
-        });
+    const role = (user.public_metadata?.role ) as UserRole;
 
-        if (!res.ok) {
-          throw new Error(`Server returned ${res.status}`);
-        }
+    await prisma.user.upsert({
+      where: { id: user.id },
+      update: {
+        email: user.email_addresses[0]?.email_address || "",
+        phone_number: user.phone_numbers[0]?.phone_number || null,
+        full_name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
+        role_type: role,
+      },
+      create: {
+        id: user.id,
+        email: user.email_addresses[0]?.email_address || "",
+        phone_number: user.phone_numbers[0]?.phone_number || null,
+        full_name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
+        role_type: role,
+      },
+    });
 
-        setStatusMessage(`Role set as ${storedRole}. Redirecting...`);
-        localStorage.removeItem('selectedRoleForSignup');
+    console.log(`User ${eventType === "user.created" ? "created" : "updated"}: ${user.id}`);
+  }
 
-        router.replace(storedRole === 'vendor' ? '/vendor/dashboard' : '/supplier/orders');
-      } catch (err) {
-        console.error('Failed to update user role:', err);
-        setErrorMessage('Failed to set your role. Please try again or contact support.');
-      }
-    };
+  if (eventType === "user.deleted") {
+    const deleted = evt.data as DeletedObjectJSON;
 
-    assignRole();
-  }, [isLoaded, isSignedIn, user, router]);
+    await prisma.user.delete({
+      where: { id: deleted.id },
+    });
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gray-100 px-4 py-8">
-      <h1 className="text-2xl font-bold text-gray-800 mb-4 text-center">
-        {errorMessage ? 'Error!' : 'Just a moment...'}
-      </h1>
-      <p className={`text-center text-lg ${errorMessage ? 'text-red-600' : 'text-gray-700'}`}>
-        {errorMessage ?? statusMessage}
-      </p>
-    </div>
-  );
-};
+    console.log(`User deleted: ${deleted.id}`);
+  }
 
-export default SetRolePage;
+  // ---------------- Handle other events if needed ----------------
+  if (eventType.startsWith("event.")) {
+    console.log(`Event Event Received: ${eventType}`, evt.data);
+    // Add your own logic here...
+  }
+
+  if (eventType.startsWith("role.")) {
+    console.log(`Role Event Received: ${eventType}`, evt.data);
+    // Add your own logic here...
+  }
+
+  return new NextResponse("Webhook processed", { status: 200 });
+}
