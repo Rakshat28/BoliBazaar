@@ -1,6 +1,7 @@
 ![alt text](./screenshots/image-3.png)
 BoliBazaar – Empowering Local Street Vendors Through Smart Sourcing
 BoliBazaar is a digital platform designed to streamline the procurement process for local street food vendors in India by enabling collective bargaining and bulk purchasing from trusted suppliers.
+<img width="1894" height="822" alt="image" src="https://github.com/user-attachments/assets/dbfa65a9-eb22-47f6-9828-7c14b129ba0c" />
 
 
 ![alt text](./screenshots/image-4.png)
