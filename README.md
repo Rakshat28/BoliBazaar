@@ -12,8 +12,7 @@ Through **bulk purchasing** and **transparent bidding**, the platform reduces co
 - [How It Works](#how-it-works)  
 - [Urban Impact](#urban-impact)  
 - [Tech Stack](#tech-stack)  
-- [Prototype Status](#prototype-status)  
-- [Screenshots](#screenshots)  
+- [Prototype Status](#prototype-status)    
 - [Future Scope](#future-scope)  
 
 ---
