@@ -120,16 +120,7 @@ BoliBazaar contributes to the **Smart Cities vision** by:
 - UI for vendor dashboards and bidding interface is partially functional  
 - Deployment is not live yet, local builds are being tested  
 
----
 
-## Screenshots  
-
-_Add screenshots of the prototype here as the build progresses._  
-
-![Placeholder Screenshot 1](./screenshots/image-1.png)  
-![Placeholder Screenshot 2](./screenshots/image-2.png)  
-
----
 
 ## Future Scope  
 
