@@ -1,99 +1,148 @@
-![alt text](./screenshots/image-3.png)
-BoliBazaar – Empowering Local Street Vendors Through Smart Sourcing
-BoliBazaar is a digital platform designed to streamline the procurement process for local street food vendors in India by enabling collective bargaining and bulk purchasing from trusted suppliers.
-<img width="1894" height="822" alt="image" src="https://github.com/user-attachments/assets/dbfa65a9-eb22-47f6-9828-7c14b129ba0c" />
+# BoliBazaar – Empowering Local Vendors Through Smart Collective Sourcing  
 
+BoliBazaar is a digital procurement platform designed to strengthen **urban supply chains** by enabling street food vendors and small businesses to collectively source raw materials from trusted suppliers.  
+Through **bulk purchasing** and **transparent bidding**, the platform reduces costs, builds trust, and ensures reliable delivery—contributing to smarter and more resilient urban markets.  
+<img width="1702" height="805" alt="image" src="https://github.com/user-attachments/assets/b2b845bb-48cf-40a4-b87d-64d9af38e53f" />
 
-![alt text](./screenshots/image-4.png)
-✅ Verified Suppliers
-What it means:
-All suppliers on BoliBazaar are thoroughly vetted before they’re allowed to sell. This includes checking:
+---
 
-Business legitimacy (registration, GST, etc.)
+## Table of Contents
+- [Overview](#overview)  
+- [Key Features](#key-features)  
+- [How It Works](#how-it-works)  
+- [Urban Impact](#urban-impact)  
+- [Tech Stack](#tech-stack)  
+- [Prototype Status](#prototype-status)  
+- [Screenshots](#screenshots)  
+- [Future Scope](#future-scope)  
 
-Product quality standards
+---
 
-Delivery reliability (on-time performance)
+## Overview  
 
-Past vendor reviews and ratings
+Urban street vendors and small businesses often face:  
+- High procurement costs due to small-scale buying  
+- Unreliable suppliers and inconsistent quality  
+- Limited bargaining power in fragmented markets  
 
-Why it matters:
-Street food vendors and small businesses often suffer due to unreliable or low-quality suppliers. BoliBazaar ensures only trusted and approved suppliers can take part, which minimizes risks and builds long-term trust in the supply chain.
+Suppliers also face issues such as:
+-Fragmented Demand
+-Low Market Visibility
+-Unreliable Payments & Logistics
+<img width="1632" height="333" alt="image" src="https://github.com/user-attachments/assets/1156996c-ecbf-49e8-9090-156da2527d1b" />
 
-🔍 Transparent Bidding
-What it means:
-Suppliers compete openly by submitting bids for bulk orders placed by vendor collectives. Every vendor can see:
+**BoliBazaar** addresses these issues by:  
+- Forming vendor collectives for increased bargaining power  
+- Enabling transparent, competitive bidding among suppliers  
+- Encouraging localized supply chains for efficiency and freshness  
+<img width="1576" height="766" alt="image" src="https://github.com/user-attachments/assets/324e968f-2650-4e0f-b477-c2d76766502f" />
 
-Which suppliers are bidding
+---
 
-What prices are being offered
+## Key Features  
 
-What terms (delivery time, quality standards, etc.) are included
+### ✅ Verified Suppliers  
+Suppliers undergo strict verification before being allowed to sell:  
+- Business legitimacy (GST, registration compliance)  
+- Product quality standards  
+- Delivery reliability and on-time performance  
+- Vendor ratings and reviews  
 
-Why it matters:
-This removes hidden commissions or biased middlemen. Vendors get the best possible price and quality through direct, fair competition—empowering even the smallest vendor to negotiate like a big buyer.
+**Benefit:** Reduces risk, ensures trust, and strengthens supply chain reliability.  
 
-🌍 Local Focus
-What it means:
-Vendors are grouped based on geographic proximity (like same city or market), and suppliers are encouraged to deliver to specific local zones. This system:
+---
 
-Reduces transport costs
+### 🔍 Transparent Bidding  
+When collectives place bulk orders, suppliers openly compete. Vendors can view:  
+- All participating suppliers  
+- Pricing offers  
+- Delivery timelines and guarantees  
 
-Increases delivery speed
+**Benefit:** Eliminates middlemen, reduces hidden costs, and gives even the smallest vendor fair access to competitive pricing.  
 
-Simplifies coordination
+---
 
-Why it matters:
-Fresh raw materials, especially in food businesses, need quick delivery. Localized operations mean faster, cheaper, and more reliable supply chains, helping vendors run their businesses smoothly without delays or losses.
+### 🌍 Localized Operations  
+Vendors are grouped by geographic proximity, encouraging suppliers to deliver within zones.  
+- Reduced transportation costs  
+- Faster delivery for perishable goods  
+- Simplified logistics and coordination  
 
+**Benefit:** Supports efficient, sustainable urban commerce while reducing waste and delays.  
 
-![alt text](./screenshots/image-5.png)
-🚀 How BoliBazaar Works — Step-by-Step
-✅ 1. Form Local Collectives
-Street food vendors, restaurant owners, or small businesses in the same locality connect via the platform and form a collective group.
-This gives them greater bargaining power—instead of ordering individually, they act like one big buyer.
+---
+<img width="1596" height="466" alt="image" src="https://github.com/user-attachments/assets/fb0d95eb-d255-4ad0-9d20-82fd296c8f83" />
 
-📦 Example: 10 vendors in Chandni Chowk join hands to place one large order instead of 10 small ones.
+## How It Works  
 
-📋 2. Create Bulk Orders
-These collectives pool their raw material needs—like vegetables, spices, oil, packaging, etc.—into one combined order.
-The system automatically calculates the total quantity and creates a bulk order request.
+1. **Form Local Collectives**  
+   Vendors in the same area collaborate to act as one large buyer.  
+   *Example: Ten vendors in Chandni Chowk pool requirements into one consolidated order.*  
 
-🧮 Why it helps: Bulk buying reduces price per unit, and attracts more serious suppliers.
+2. **Create Bulk Orders**  
+   The system aggregates vendor needs (vegetables, spices, oils, packaging, etc.) into a combined request.  
 
-🤝 3. Suppliers Compete
-Once a bulk order is created, verified suppliers on the platform are notified.
-They submit bids by offering:
+3. **Suppliers Compete**  
+   Verified suppliers are notified and submit competitive bids visible to all vendors.  
 
-A competitive price
+4. **Select the Best Deal**  
+   The collective secures the supplier based on price, reliability, and reputation.  
 
-Delivery timeline
+**Result:** Vendors save money, gain transparency, and ensure dependable delivery.  
 
-Product quality guarantee
+---
 
-All bids are visible to the collective, encouraging transparent and fair competition.
+## Urban Impact  
 
-🏆 4. Secure the Best Deal
-The system or the collective automatically selects the best supplier based on:
+BoliBazaar contributes to the **Smart Cities vision** by:  
+- Enhancing **last-mile urban food infrastructure**  
+- Supporting **small businesses and street vendors** with digital tools  
+- Encouraging **transparent and sustainable procurement practices**  
+- Reducing **logistics inefficiencies and food waste**  
 
-Lowest price
+---
 
-Delivery time
+## Tech Stack  
 
-Supplier reputation
+- **Frontend:** Next.js, TypeScript, Tailwind CSS  
+- **Backend:** Node.js, Express  
+- **Database:** PostgreSQL with Prisma ORM  
+- **Authentication:** Clerk (JWT-based)  
+- **Deployment (planned):** Vercel (frontend), Railway/Render (backend)  
 
-Once selected, the winning supplier delivers the order to the collective, completing the transaction.
+---
 
-🛒 Result: Vendors get high-quality materials at a better rate, with trust and transparency.
+## Prototype Status  
 
-Tech Stack
+🚧 **Work in Progress**  
+- Core features (collectives, bulk order creation, bidding) are under development  
+- UI for vendor dashboards and bidding interface is partially functional  
+- Deployment is not live yet, local builds are being tested  
 
+---
 
+## Screenshots  
 
+_Add screenshots of the prototype here as the build progresses._  
 
-![alt text](./screenshots/image-6.png)
-Purpose
-To reduce the burden on small vendors who often face high costs and limited access to quality suppliers. BoliBazaar helps them save money, increase trust, and buy smarter together.
+![Placeholder Screenshot 1](./screenshots/image-1.png)  
+![Placeholder Screenshot 2](./screenshots/image-2.png)  
 
+---
 
+## Future Scope  
 
+- AI-driven demand forecasting for vendors  
+- Smart contract–based bidding and supplier agreements  
+- Mobile-first experience for on-ground vendors  
+- Integration with digital payment systems and UPI  
+- Expansion to multiple cities and market clusters  
+
+---
+
+## Purpose  
+
+BoliBazaar reduces the economic burden on small urban vendors by providing access to **affordable, high-quality supplies through collective bargaining and transparent systems**.  
+It strengthens **local economies**, improves **vendor resilience**, and contributes to the broader goal of **sustainable and inclusive urban infrastructure**.  
+
+---
