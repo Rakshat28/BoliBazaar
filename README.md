@@ -26,9 +26,10 @@ Urban street vendors and small businesses often face:
 - Limited bargaining power in fragmented markets  
 
 Suppliers also face issues such as:
--Fragmented Demand
--Low Market Visibility
--Unreliable Payments & Logistics
+- Fragmented Demand
+- Low Market Visibility
+- Unreliable Payments & Logistics
+
 <img width="1632" height="333" alt="image" src="https://github.com/user-attachments/assets/1156996c-ecbf-49e8-9090-156da2527d1b" />
 
 **BoliBazaar** addresses these issues by:  
