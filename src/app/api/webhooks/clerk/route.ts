@@ -43,9 +43,11 @@ export async function POST(req: Request) {
 
     // Read the role from Clerk metadata (set by frontend at signup)
     // Clerk's private metadata can be set using the SignUp component's `unsafeMetadata` field
+
 // Read the role from Clerk metadata (set by frontend at signup)
 const roleFromMetadata =
   (user.public_metadata?.role as UserRole | undefined) || "VENDOR";
+
 
     // Upsert the user into Prisma
     await prisma.user.upsert({
