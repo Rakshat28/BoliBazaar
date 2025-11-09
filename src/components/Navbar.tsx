@@ -6,16 +6,18 @@ import { SidebarTrigger } from "./ui/sidebar";
 import { useRouter } from "next/navigation";
 import RoleSelectionModal from "./RoleSelectionModal";
 import { Button } from "./ui/button";
-import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { useClerk, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
 export default function Navbar() {
   const router = useRouter();
+  const { openSignIn, openSignUp } = useClerk();
 
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
   const handleRoleSelected = (role: 'vendor' | 'supplier') => {
     localStorage.setItem('selectedRoleForSignup', role);
-    alert(`User selected: ${role.toUpperCase()}!`);
     setIsRoleModalOpen(false); 
-    router.push('/sign-up');
+    openSignUp({
+      unsafeMetadata: { role },
+    });
   };
 
     return (
@@ -39,7 +41,7 @@ export default function Navbar() {
         <SignedOut>
           <div className="flex gap-3">
           <Button
-              onClick={() => setIsRoleModalOpen(true)}
+              onClick={() => openSignIn({})}
               className="px-4 py-2 text-sm rounded-md font-semibold text-white bg-[#3e6c6c] hover:bg-[#457C78] border border-[#457C78] transition-all"
           >
               Sign In

@@ -31,38 +31,47 @@ export async function POST(req: Request) {
       "svix-signature": svix_signature,
     }) as WebhookEvent;
   } catch (err) {
-    console.error("Webhook verification failed:", err);
+    console.error(" Webhook verification failed:", err);
     return new NextResponse("Invalid signature", { status: 400 });
   }
 
   const eventType = evt.type;
 
-  // ---------------- Handle user events ----------------
+  // Handle user created/updated 
   if (eventType === "user.created" || eventType === "user.updated") {
     const user = evt.data as UserJSON;
 
-    const role = (user.private_metadata?.role || "VENDOR") as UserRole;
+    // Read the role from Clerk metadata (set by frontend at signup)
+    // Clerk's private metadata can be set using the SignUp component's `unsafeMetadata` field
+    const roleFromMetadata =
+      (user.private_metadata?.role as UserRole | undefined) || "VENDOR";
 
+    // Upsert the user into Prisma
     await prisma.user.upsert({
       where: { id: user.id },
       update: {
         email: user.email_addresses[0]?.email_address || "",
         phone_number: user.phone_numbers[0]?.phone_number || null,
         full_name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
-        role_type: role,
+        role_type: roleFromMetadata,
       },
       create: {
         id: user.id,
         email: user.email_addresses[0]?.email_address || "",
         phone_number: user.phone_numbers[0]?.phone_number || null,
         full_name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
-        role_type: role,
+        role_type: roleFromMetadata,
       },
     });
 
-    console.log(`User ${eventType === "user.created" ? "created" : "updated"}: ${user.id}`);
+    console.log(
+      ` User ${
+        eventType === "user.created" ? "created" : "updated"
+      }: ${user.id} (${roleFromMetadata})`
+    );
   }
 
+  // ---------------- Handle user deleted ----------------
   if (eventType === "user.deleted") {
     const deleted = evt.data as DeletedObjectJSON;
 
@@ -71,17 +80,6 @@ export async function POST(req: Request) {
     });
 
     console.log(`User deleted: ${deleted.id}`);
-  }
-
-  // ---------------- Handle other events if needed ----------------
-  if (eventType.startsWith("event.")) {
-    console.log(`Event Event Received: ${eventType}`, evt.data);
-    // Add your own logic here...
-  }
-
-  if (eventType.startsWith("role.")) {
-    console.log(`Role Event Received: ${eventType}`, evt.data);
-    // Add your own logic here...
   }
 
   return new NextResponse("Webhook processed", { status: 200 });
