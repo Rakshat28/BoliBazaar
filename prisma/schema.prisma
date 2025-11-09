@@ -115,13 +115,14 @@ model Product {
   @@unique([name, grade]) // UNIQUE (name, grade)
   @@map("products")
 }
-
 model Vendor {
-  user_id          String    @id // user_id is the PK and FK
+  user_id          String    @id
   user             User      @relation(fields: [user_id], references: [id], onDelete: Cascade)
-  area_group_id    Int
-  areaGroup        AreaGroup @relation(fields: [area_group_id], references: [id])
-  reputation_score Decimal   @default(5.00) @db.Decimal(3, 2) // NUMERIC(3, 2)
+  
+  area_group_id    Int? // <--- ADD ? TO MAKE THIS OPTIONAL
+  areaGroup        AreaGroup? @relation(fields: [area_group_id], references: [id]) // <-- ADD ? HERE TOO
+
+  reputation_score Decimal   @default(5.00) @db.Decimal(3, 2)
   created_at       DateTime  @default(now())
   updated_at       DateTime  @updatedAt
 
