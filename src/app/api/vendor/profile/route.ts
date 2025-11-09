@@ -3,10 +3,7 @@ import prisma from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 
 export async function PATCH(request: Request) {
-  // FIXME: This is a placeholder for testing.
-  // Once Clerk is live, replace this with the real auth() helper.
-  const userId = "user_2i3B2aBcDeFgHiJkLmNoPqRsTuV";
-  // const { userId } = await auth();
+const { userId } = await auth();
 
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });
