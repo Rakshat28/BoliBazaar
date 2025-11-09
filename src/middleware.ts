@@ -37,12 +37,11 @@ export default clerkMiddleware(async (auth, request) => {
   // 3. Get user role
   const userRole = (sessionClaims?.publicMetadata as PublicMetadata)?.role;
 
-  // 4. Onboarding Redirect: If user is authenticated but has no role, redirect to set-role page.
-  // This is the core of the onboarding flow.
-  if (userId && !userRole && currentPath !== '/onboarding/set-role') {
-    console.log(`[Middleware] User ${userId} has no role. Redirecting to /onboarding/set-role from ${currentPath}`);
-    return NextResponse.redirect(new URL('/onboarding/set-role', request.url));
-  }
+  // // 4. Onboarding Redirect: If user is authenticated but has no role, redirect to set-role page.
+  // // This is the core of the onboarding flow.
+  // if (userId && !userRole) {
+  //   return NextResponse.redirect(new URL('/onboarding/set-role', request.url));
+  // }
 
   // 5. Vendor Onboarding Specific Logic (Area Group Selection)
   // This logic runs ONLY for authenticated 'vendor' users.
