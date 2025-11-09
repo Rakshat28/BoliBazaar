@@ -3,10 +3,7 @@ import prisma from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 
 export async function GET() {
-  // FIXME: This is a temporary placeholder for testing.
-  // Once Clerk is live, this will be replaced by the real user ID from the auth() helper.
-  const userId = "user_2i3B2aBcDeFgHiJkLmNoPqRsTuV"; // Replace with a valid user_id from your 'vendors' table
-  // const { userId } = await auth();
+const { userId } = await auth();
 
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });

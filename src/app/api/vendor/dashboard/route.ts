@@ -2,12 +2,12 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { auth } from '@clerk/nextjs/server';
 
+// Ensure this route is always dynamic and uses the latest user session
+export const dynamic = 'force-dynamic';
+
 export async function GET() {
-  // FIXME: This is a temporary placeholder for testing.
-  // Once Clerk authentication is fully implemented and tested on the frontend,
-  // this line should be replaced with the one below it to get the real logged-in user.
-  const userId = "user_2i3B2aBcDeFgHiJkLmNoPqRsTuV"; // Replace with a valid user_id from your 'vendors' table for testing
-  // const { userId } = await auth();
+  // Use the real userId from Clerk's auth helper
+  const { userId } = await auth();
 
   if (!userId) {
     return new NextResponse("Unauthorized", { status: 401 });
@@ -19,17 +19,29 @@ export async function GET() {
     });
 
     if (!vendor) {
-      return new NextResponse("Vendor profile not found for the provided user ID", { status: 404 });
+      // This is a valid state for a user who just signed up but hasn't onboarded
+      // Return 0 stats instead of an error
+      const dashboardStats = {
+        activePools: 0,
+        successfulPools: 0,
+        totalSaved: `₹0`,
+      };
+      return NextResponse.json(dashboardStats);
     }
 
     // --- Real Database Queries for Dashboard Stats ---
 
-    const activePoolsCount = await prisma.pooledOrder.count({
-      where: {
-        area_group_id: vendor.area_group_id,
-        status: { in: ['PREPARING', 'AUCTION_OPEN'] },
-      },
-    });
+    let activePoolsCount = 0;
+
+    // Only search for pools if the vendor has an area_group_id
+    if (vendor.area_group_id) {
+      activePoolsCount = await prisma.pooledOrder.count({
+        where: {
+          area_group_id: vendor.area_group_id,
+          status: { in: ['PREPARING', 'AUCTION_OPEN'] },
+        },
+      });
+    }
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -37,7 +49,7 @@ export async function GET() {
     const successfulPoolsCount = await prisma.orderItem.count({
       where: {
         vendor_id: userId,
-        status: 'DELIVERED', // Counting delivered orders as successful participations
+        status: 'DELIVERED',
         pooledOrder: {
           created_at: { gte: thirtyDaysAgo },
         },
@@ -45,9 +57,6 @@ export async function GET() {
     });
     
     // TODO: Implement a robust savings calculation.
-    // This will require comparing the `final_price_per_unit` from won orders
-    // against a benchmark market price for that product on that day.
-    // Returning 0 until this logic is built.
     const totalSaved = 0;
 
     const dashboardStats = {
