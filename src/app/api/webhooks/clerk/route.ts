@@ -2,7 +2,6 @@ export const runtime = "nodejs";
 import { Webhook } from "svix";
 import { headers } from "next/headers";
 import { NextResponse } from "next/server";
-// Import Prisma types
 import { PrismaClient, UserRole, Prisma } from "@prisma/client"; 
 import {
   UserJSON,
@@ -38,95 +37,52 @@ export async function POST(req: Request) {
 
   const eventType = evt.type;
 
-  // Handle user created
-  if (eventType === "user.created") {
+  // Handle user created/updated 
+  if (eventType === "user.created" || eventType === "user.updated") {
     const user = evt.data as UserJSON;
-    const roleFromMetadata =
-      (user.public_metadata?.role as UserRole | undefined) || "VENDOR";
 
-    try {
-      // Use a transaction to create the User AND the related profile
-      await prisma.$transaction(async (tx) => {
-        // 1. Create the User
-        await tx.user.create({
-          data: {
-            id: user.id,
-            email: user.email_addresses[0]?.email_address || "",
-            phone_number: user.phone_numbers[0]?.phone_number || null,
-            full_name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
-            role_type: roleFromMetadata,
-          },
-        });
+    // Read the role from Clerk metadata (set by frontend at signup)
+    // Clerk's private metadata can be set using the SignUp component's `unsafeMetadata` field
 
-        // 2. Create the corresponding Vendor or Supplier profile
-        if (roleFromMetadata === "VENDOR") {
-          await tx.vendor.create({
-            data: {
-              user_id: user.id,
-              reputation_score: 5.00,
-              area_group_id: null,
-            },
-          });
-        } else if (roleFromMetadata === "SUPPLIER") {
-          await tx.supplier.create({
-            data: {
-              user_id: user.id,
-              business_name: `${user.first_name || "New"} ${user.last_name || "Supplier"}`.trim(),
-              verification_status: "PENDING",
-              overall_rating: 5.00,
-            },
-          });
-        }
-      });
+// Read the role from Clerk metadata (set by frontend at signup)
+const roleFromMetadata =
+  (user.public_metadata?.role as UserRole | undefined) || "VENDOR";
 
-      console.log(
-        `User and ${roleFromMetadata} profile created: ${user.id}`
-      );
-    } catch (error) {
-      console.error("Failed to create user and profile:", error);
-      return new NextResponse("Error creating user profile", { status: 500 });
-    }
-  }
 
-  // Handle user updated
-  if (eventType === "user.updated") {
-    const user = evt.data as UserJSON;
-    const roleFromMetadata = user.public_metadata?.role as UserRole | undefined;
-
-    const updateData: Prisma.UserUpdateInput = {
-      email: user.email_addresses[0]?.email_address || "",
-      phone_number: user.phone_numbers[0]?.phone_number || null,
-      full_name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
-    };
-
-    if (roleFromMetadata) {
-      updateData.role_type = roleFromMetadata;
-    }
-
-    await prisma.user.update({
+    // Upsert the user into Prisma
+    await prisma.user.upsert({
       where: { id: user.id },
-      data: updateData,
+      update: {
+        email: user.email_addresses[0]?.email_address || "",
+        phone_number: user.phone_numbers[0]?.phone_number || null,
+        full_name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
+        role_type: roleFromMetadata,
+      },
+      create: {
+        id: user.id,
+        email: user.email_addresses[0]?.email_address || "",
+        phone_number: user.phone_numbers[0]?.phone_number || null,
+        full_name: `${user.first_name || ""} ${user.last_name || ""}`.trim(),
+        role_type: roleFromMetadata,
+      },
     });
 
-    console.log(`User updated: ${user.id}`);
+    console.log(
+      ` User ${
+        eventType === "user.created" ? "created" : "updated"
+      }: ${user.id} (${roleFromMetadata})`
+    );
   }
 
-  // Handle user deleted
+  // ---------------- Handle user deleted ----------------
   if (eventType === "user.deleted") {
     const deleted = evt.data as DeletedObjectJSON;
 
-    if (!deleted.id) {
-      return new NextResponse("User ID missing from delete event", { status: 400 });
-    }
+    await prisma.user.delete({
+      where: { id: deleted.id },
+    });
 
-    try {
-      await prisma.user.delete({
-        where: { id: deleted.id },
-      });
-      console.log(`User deleted: ${deleted.id}`);
-    } catch (error) {
-      console.error(`Failed to delete user: ${deleted.id}`, error);
-    }
+    console.log(`User deleted: ${deleted.id}`);
   }
 
   return new NextResponse("Webhook processed", { status: 200 });
