@@ -1,17 +1,26 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SidebarTrigger } from "./ui/sidebar";
 import { useRouter } from "next/navigation";
 import RoleSelectionModal from "./RoleSelectionModal";
 import { Button } from "./ui/button";
-import { useClerk, SignedIn, SignedOut, UserButton } from "@clerk/nextjs"
+import { useClerk, SignedIn, SignedOut, UserButton, useUser } from "@clerk/nextjs"
 export default function Navbar() {
   const router = useRouter();
   const { openSignIn, openSignUp } = useClerk();
+  const { isLoaded, isSignedIn, user } = useUser();
 
   const [isRoleModalOpen, setIsRoleModalOpen] = useState(false);
+  useEffect(() => {
+    if (!isLoaded || !isSignedIn || !user) return;
+
+    const role = user.publicMetadata?.role;
+
+    if (role === "vendor") router.replace("/vendor/dashboard");
+    else if (role === "supplier") router.replace("/supplier/dashboard");
+  }, [isLoaded, isSignedIn, user, router]);
   const handleRoleSelected = (role: 'vendor' | 'supplier') => {
     localStorage.setItem('selectedRoleForSignup', role);
     setIsRoleModalOpen(false); 
