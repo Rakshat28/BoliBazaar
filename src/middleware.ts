@@ -9,11 +9,8 @@ interface PublicMetadata {
 
 const isPublicRoute = createRouteMatcher([
   '/',
-  '/sign-in(.*)',
-  '/sign-up(.*)',
-  '/api/webhook/clerk(.*)', // <--- CORRECTED THIS LINE
+  '/api/webhooks/clerk(.*)', // <--- CORRECTED THIS LINE
   '/forbidden(.*)',
-  '/onboarding/set-role'
 ]);
 
 const isVendorRoute = createRouteMatcher(['/vendor(.*)']);
